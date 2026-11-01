@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KDP Kids Book Studio Pro — 8.5" × 11" Publisher</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --card: #ffffff;
+      --accent: #4f46e5;
+      --accent-hover: #4338ca;
+      --emerald: #10b981;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; }
+    
+    .top-bar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+    .badge { background: rgba(79,70,229,0.25); border: 1px solid #6366f1; color: #a5b4fc; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+
+    .controls-grid {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+      align-items: end;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.4px; }
+    .field input, .field select {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: #6366f1; }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: 0.15s;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-green { background: var(--emerald); }
+    .btn-green:hover { background: #059669; }
+    .btn-secondary { background: #334155; }
+    .btn-secondary:hover { background: #475569; }
+
+    .chapter-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      padding-bottom: 4px;
+    }
+    .tab {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .pages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 24px;
+    }
+    @media (max-width: 820px) {
+      .pages-grid { grid-template-columns: 1fr; }
+    }
+
+    .page-card {
+      background: #fff;
+      color: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+      display: flex;
+      flex-direction: column;
+    }
+    .card-top {
+      background: #f1f5f9;
+      padding: 10px 14px;
+      border-bottom: 1px solid #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .kdp-canvas-wrap {
+      width: 100%;
+      aspect-ratio: 8.5 / 11;
+      background: #fff;
+      position: relative;
+      padding: 4.5%;
+    }
+    .kdp-frame {
+      width: 100%;
+      height: 100%;
+      border: 3.5px solid #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px;
+      position: relative;
+      background: #fff;
+    }
+    .kdp-header-strip {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 800;
+      border-bottom: 2px solid #000;
+      padding-bottom: 5px;
+      text-transform: uppercase;
+    }
+    .kdp-art-zone {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .kdp-art-zone svg, .kdp-art-zone img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .kdp-footer-strip {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 700;
+      border-top: 1.5px solid #000;
+      padding-top: 5px;
+      color: #334155;
+    }
+    .card-actions {
+      background: #f8fafc;
+      padding: 10px 14px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Full Cover Card */
+    .cover-card {
+      grid-column: 1 / -1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .cover-spread-box {
+      width: 100%;
+      aspect-ratio: 17.37 / 11.25;
+      background: #1e1b4b;
+      border: 4px solid #6366f1;
+      border-radius: 8px;
+      display: flex;
+      overflow: hidden;
+      color: #fff;
+      margin-top: 12px;
+    }
+    .cover-half {
+      flex: 1;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .cover-spine-bar {
+      width: 38px;
+      background: #0f172a;
+      border-left: 1px dashed rgba(255,255,255,0.35);
+      border-right: 1px dashed rgba(255,255,255,0.35);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+    .barcode-box {
+      width: 130px;
+      height: 64px;
+      background: #fff;
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      border: 2px solid #000;
+      margin-top: auto;
+    }
+    .trace-row {
+      border-top: 1.5px solid #94a3b8;
+      border-bottom: 2px solid #000;
+      position: relative;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-family: monospace;
+      font-size: 20px;
+      letter-spacing: 8px;
+      color: #94a3b8;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="brand">
+      <h1>KDP KIDS BOOK STUDIO PRO</h1>
+      <span class="badge">8.5" × 11" Amazon KDP Ready</span>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <input type="file" id="bulkFiles" multiple accept="image/*" style="display:none" onchange="handleBulkFiles(event)" />
+      <button class="btn btn-secondary" onclick="document.getElementById('bulkFiles').click()">Upload Custom Images</button>
+      <button class="btn" onclick="renderCurrentChapterAI()">Generate Chapter with AI</button>
+      <button class="btn btn-green" onclick="exportFullBookPDF()">Export KDP Interior PDF (8.5"×11")</button>
+    </div>
+  </div>
+
+  <div class="controls-grid">
+    <div class="field">
+      <label>Book Title</label>
+      <input type="text" id="bookTitle" value="My Gaming Room" oninput="refreshAll()" />
+    </div>
+    <div class="field">
+      <label>Subtitle</label>
+      <input type="text" id="bookSubtitle" value="Cozy 3D Kawaii Coloring & Activity Book" oninput="refreshAll()" />
+    </div>
+    <div class="field">
+      <label>Author / Brand</label>
+      <input type="text" id="bookAuthor" value="Ghaith Studio" oninput="refreshAll()" />
+    </div>
+    <div class="field">
+      <label>Total Pages (KDP Spine)</label>
+      <input type="number" id="pageCount" value="54" min="24" max="150" oninput="refreshAll()" />
+    </div>
+    <div class="field">
+      <label>Gemini API Key (Optional)</label>
+      <input type="password" id="apiKey" placeholder="Uses Render ENV or enter key..." />
+    </div>
+  </div>
+
+  <div class="chapter-tabs">
+    <button class="tab active" onclick="setTab('ch1', this)">Ch.1: 3D Room Setups (1–10)</button>
+    <button class="tab" onclick="setTab('ch2', this)">Ch.2: Hero Gear Close-Ups (11–20)</button>
+    <button class="tab" onclick="setTab('ch3', this)">Ch.3: Step-by-Step Drawing (21–30)</button>
+    <button class="tab" onclick="setTab('ch4', this)">Ch.4: Word Tracing Sheets (31–40)</button>
+    <button class="tab" onclick="setTab('ch5', this)">Ch.5: Cozy Story Scenes (41–50)</button>
+    <button class="tab" onclick="setTab('cover', this)">Full KDP Cover & Front Matter</button>
+  </div>
+
+  <div class="pages-grid" id="pagesGrid"></div>
+
+  <script>
+    const PAGES = [
+      // Ch 1: 1-10
+      { id: 1, ch: 'ch1', type: 'coloring', title: 'Pro Triple-Monitor Battlestation', item: 'triple monitor desk, gaming chair, PC tower' },
+      { id: 2, ch: 'ch1', type: 'coloring', title: 'Loft Bunk Bed Gaming Corner', item: 'loft bed with gaming desk underneath and cozy rug' },
+      { id: 3, ch: 'ch1', type: 'coloring', title: 'Cozy Beanbag Console Lounge', item: 'oversized beanbag, big TV screen, retro console' },
+      { id: 4, ch: 'ch1', type: 'coloring', title: 'Twin Upright Arcade Cabinet Den', item: 'two classic arcade machines with joysticks and neon sign' },
+      { id: 5, ch: 'ch1', type: 'coloring', title: 'Streamer Ring-Light Studio Desk', item: 'dual monitors, boom arm microphone, ring light, webcam' },
+      { id: 6, ch: 'ch1', type: 'coloring', title: 'Sim-Racing Wheel & Cockpit Rig', item: 'racing simulator seat, steering wheel, pedals, curved screen' },
+      { id: 7, ch: 'ch1', type: 'coloring', title: 'VR Holo-Mat Play Zone', item: 'VR headset on stand, circular play mat, wall sensors' },
+      { id: 8, ch: 'ch1', type: 'coloring', title: 'Retro Cartridge & Collector Shelf', item: 'floating shelves filled with handheld consoles and figures' },
+      { id: 9, ch: 'ch1', type: 'coloring', title: 'Gamer Mini-Fridge & Snack Station', item: 'glass door mini fridge, popcorn bucket, soda cans' },
+      { id: 10, ch: 'ch1', type: 'coloring', title: 'Starlight Attic Gaming Sanctuary', item: 'attic skylight window with stars, cozy corner desk' },
+      // Ch 2: 11-20
+      { id: 11, ch: 'ch2', type: 'coloring', title: 'Ergonomic Racing Gaming Chair', item: 'ergonomic gaming chair with heart pillow and wheels' },
+      { id: 12, ch: 'ch2', type: 'coloring', title: 'Mechanical Custom Keycap Keyboard', item: 'mechanical keyboard with coiled aviator cable' },
+      { id: 13, ch: 'ch2', type: 'coloring', title: 'Cat-Ear Headset on Stand', item: 'kawaii gaming headphones with mic on stand' },
+      { id: 14, ch: 'ch2', type: 'coloring', title: 'Tempered Glass Triple-Fan PC Case', item: 'gaming PC tower with 3 cooling fans and glass panel' },
+      { id: 15, ch: 'ch2', type: 'coloring', title: 'Portable Widescreen Handheld Console', item: 'portable handheld game console with thumbsticks' },
+      { id: 16, ch: 'ch2', type: 'coloring', title: 'Wireless Pro Gamepad Controller', item: 'wireless video game controller with D-pad and buttons' },
+      { id: 17, ch: 'ch2', type: 'coloring', title: 'Studio Podcast Boom Microphone', item: ' condenser microphone on boom arm with pop filter' },
+      { id: 18, ch: 'ch2', type: 'coloring', title: 'Virtual Reality Visor & Controllers', item: 'VR headset goggles and twin motion controllers' },
+      { id: 19, ch: 'ch2', type: 'coloring', title: 'Force-Feedback Racing Wheel Set', item: 'racing steering wheel and floor pedal set' },
+      { id: 20, ch: 'ch2', type: 'coloring', title: 'Honeycomb Lightweight Gaming Mouse', item: 'ultralight gaming mouse on desk pad' },
+      // Ch 3: 21-30 (Step-by-step)
+      { id: 21, ch: 'ch3', type: 'steps', title: 'How to Draw a Gamepad Controller', item: 'gamepad controller' },
+      { id: 22, ch: 'ch3', type: 'steps', title: 'How to Draw an Arcade Cabinet', item: 'arcade machine' },
+      { id: 23, ch: 'ch3', type: 'steps', title: 'How to Draw a Gaming PC Tower', item: 'PC tower case' },
+      { id: 24, ch: 'ch3', type: 'steps', title: 'How to Draw a Gaming Chair', item: 'gaming chair' },
+      { id: 25, ch: 'ch3', type: 'steps', title: 'How to Draw a Gamer Headset', item: 'gaming headset' },
+      { id: 26, ch: 'ch3', type: 'steps', title: 'How to Draw a Handheld Console', item: 'handheld game console' },
+      { id: 27, ch: 'ch3', type: 'steps', title: 'How to Draw a Cute Desk Robot', item: 'kawaii desk robot mascot' },
+      { id: 28, ch: 'ch3', type: 'steps', title: 'How to Draw a VR Headset', item: 'VR headset visor' },
+      { id: 29, ch: 'ch3', type: 'steps', title: 'How to Draw a Pixel Sword', item: 'pixel art sword' },
+      { id: 30, ch: 'ch3', type: 'steps', title: 'How to Draw a Gamer Mouse', item: 'gaming mouse' },
+      // Ch 4: 31-40 (Tracing)
+      { id: 31, ch: 'ch4', type: 'trace', title: 'Trace & Color: CONTROLLER', word: 'CONTROLLER', item: 'wireless gamepad' },
+      { id: 32, ch: 'ch4', type: 'trace', title: 'Trace & Color: KEYBOARD', word: 'KEYBOARD', item: 'mechanical keyboard' },
+      { id: 33, ch: 'ch4', type: 'trace', title: 'Trace & Color: HEADSET', word: 'HEADSET', item: 'stereo gaming headset' },
+      { id: 34, ch: 'ch4', type: 'trace', title: 'Trace & Color: MONITOR', word: 'MONITOR', item: 'widescreen gaming monitor' },
+      { id: 35, ch: 'ch4', type: 'trace', title: 'Trace & Color: ARCADE', word: 'ARCADE', item: 'retro arcade cabinet' },
+      { id: 36, ch: 'ch4', type: 'trace', title: 'Trace & Color: JOYSTICK', word: 'JOYSTICK', item: 'classic flight joystick' },
+      { id: 37, ch: 'ch4', type: 'trace', title: 'Trace & Color: CONSOLE', word: 'CONSOLE', item: 'handheld gaming console' },
+      { id: 38, ch: 'ch4', type: 'trace', title: 'Trace & Color: MICROPHONE', word: 'MICROPHONE', item: 'streamer microphone' },
+      { id: 39, ch: 'ch4', type: 'trace', title: 'Trace & Color: COMPUTER', word: 'COMPUTER', item: 'desktop gaming PC' },
+      { id: 40, ch: 'ch4', type: 'trace', title: 'Trace & Color: LEVEL UP', word: 'LEVEL UP', item: 'trophy and star badge' },
+      // Ch 5: 41-50 (Stories)
+      { id: 41, ch: 'ch5', type: 'story', title: 'The Big Pixel Tournament', story: 'Leo put on his headset and smiled. Tonight his team was competing for the Golden Pixel Cup!', item: 'esports gaming desk setup with trophy' },
+      { id: 42, ch: 'ch5', type: 'story', title: 'Unpacking the New Setup', story: 'Boxes were stacked neatly by the desk as the shiny new monitor and keyboard clicked into place.', item: 'new gaming monitor and keyboard on desk' },
+      { id: 43, ch: 'ch5', type: 'story', title: 'Zero-Gravity VR Mission', story: 'With the VR goggles on, the bedroom turned into an orbital space station overlooking Saturn.', item: 'VR gaming zone with planets on screen' },
+      { id: 44, ch: 'ch5', type: 'story', title: 'The Secret Arcade High Score', story: 'One last token went into the slot, and the classic arcade screen lit up with a new record!', item: 'classic arcade machine glowing' },
+      { id: 45, ch: 'ch5', type: 'story', title: 'Rainy Afternoon Cozy Quest', story: 'Raindrops pattered on the window while a warm mug of cocoa sat beside the handheld console.', item: 'cozy window desk with handheld console and mug' },
+      { id: 46, ch: 'ch5', type: 'story', title: 'Robo-Buddy Joins the Party', story: 'The little desk robot blinked its cheerful LED eyes every time a level was completed.', item: 'cute robot figure next to gaming monitor' },
+      { id: 47, ch: 'ch5', type: 'story', title: 'Final Lap on Rainbow Circuit', story: 'Gripping the steering wheel tightly, the kart boosted across the finish line in first place!', item: 'sim racing wheel setup with race track on screen' },
+      { id: 48, ch: 'ch5', type: 'story', title: 'Collector Shelf Treasure', story: 'Every trophy and figure on the top wall shelf told the story of an awesome adventure.', item: 'wall shelf with gaming trophies and plushies' },
+      { id: 49, ch: 'ch5', type: 'story', title: 'Going Live to the World', story: 'The ring light glowed brightly as the countdown reached 3, 2, 1—Stream Starting Now!', item: 'streamer desk with ring light and mic' },
+      { id: 50, ch: 'ch5', type: 'story', title: 'Victory Royale Confetti!', story: 'Balloons and stars danced across the triple screens as the whole room celebrated the win!', item: 'complete dream gaming room panorama' }
+    ];
+
+    let activeTab = 'ch1';
+    const customImages = {};
+
+    function setTab(tabId, btn) {
+      activeTab = tabId;
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderGrid();
+    }
+
+    function refreshAll() {
+      renderGrid();
+    }
+
+    // Generate clean, non-overlapping kawaii vector SVG per page ID
+    function buildVectorSVG(p) {
+      const variant = p.id % 5;
+      return `<svg viewBox="0 0 800 900" xmlns="http://www.w3.org/2000/svg">
+        <rect width="800" height="900" fill="#ffffff"/>
+        <!-- Wall Corner Lines -->
+        <line x1="80" y1="40" x2="80" y2="680" stroke="#000" stroke-width="6"/>
+        <line x1="80" y1="680" x2="760" y2="680" stroke="#000" stroke-width="6"/>
+        <!-- Floating Shelf (Top Left) -->
+        <rect x="110" y="90" width="240" height="22" rx="6" fill="#fff" stroke="#000" stroke-width="6"/>
+        <rect x="135" y="42" width="38" height="48" rx="4" fill="#fff" stroke="#000" stroke-width="5"/>
+        <rect x="180" y="36" width="44" height="54" rx="4" fill="#fff" stroke="#000" stroke-width="5"/>
+        <circle cx="285" cy="62" r="26" fill="#fff" stroke="#000" stroke-width="5"/>
+        <!-- LED Hexagons (Top Right) -->
+        <polygon points="480,70 520,50 560,70 560,115 520,135 480,115" fill="#fff" stroke="#000" stroke-width="6"/>
+        <polygon points="560,70 600,50 640,70 640,115 600,135 560,115" fill="#fff" stroke="#000" stroke-width="6"/>
+        <polygon points="520,135 560,115 600,135 600,180 560,200 520,180" fill="#fff" stroke="#000" stroke-width="6"/>
+        <!-- Desk Surface -->
+        <polygon points="120,470 720,470 760,540 80,540" fill="#fff" stroke="#000" stroke-width="7" stroke-linejoin="round"/>
+        <rect x="110" y="540" width="32" height="240" fill="#fff" stroke="#000" stroke-width="7"/>
+        <rect x="690" y="540" width="32" height="240" fill="#fff" stroke="#000" stroke-width="7"/>
+        <!-- Center Monitor -->
+        <rect x="250" y="220" width="340" height="210" rx="18" fill="#fff" stroke="#000" stroke-width="8"/>
+        <rect x="270" y="240" width="300" height="170" rx="10" fill="#fff" stroke="#000" stroke-width="5"/>
+        <!-- Cute Screen Graphic Variant -->
+        ${variant === 0 ? `<circle cx="420" cy="325" r="45" fill="#fff" stroke="#000" stroke-width="5"/><circle cx="405" cy="315" r="6"/><circle cx="435" cy="315" r="6"/>` : ''}
+        ${variant === 1 ? `<polygon points="420,265 470,365 370,365" fill="#fff" stroke="#000" stroke-width="6"/>` : ''}
+        ${variant === 2 ? `<rect x="355" y="285" width="130" height="80" rx="20" fill="#fff" stroke="#000" stroke-width="6"/>` : ''}
+        ${variant === 3 ? `<path d="M360,340 Q420,260 480,340" fill="none" stroke="#000" stroke-width="6"/>` : ''}
+        ${variant === 4 ? `<polygon points="420,270 435,310 475,310 442,335 455,375 420,350 385,375 398,335 365,310 405,310" fill="#fff" stroke="#000" stroke-width="5"/>` : ''}
+        <rect x="395" y="430" width="50" height="40" fill="#fff" stroke="#000" stroke-width="7"/>
+        <rect x="350" y="462" width="140" height="16" rx="6" fill="#fff" stroke="#000" stroke-width="6"/>
+        <!-- Keyboard & Mouse -->
+        <polygon points="310,490 510,490 525,525 295,525" fill="#fff" stroke="#000" stroke-width="6"/>
+        <ellipse cx="585" cy="510" rx="22" ry="15" fill="#fff" stroke="#000" stroke-width="6"/>
+        <!-- PC Tower (Right Floor) -->
+        <rect x="555" y="565" width="125" height="225" rx="10" fill="#fff" stroke="#000" stroke-width="7"/>
+        <circle cx="617" cy="615" r="24" fill="#fff" stroke="#000" stroke-width="5"/>
+        <circle cx="617" cy="675" r="24" fill="#fff" stroke="#000" stroke-width="5"/>
+        <circle cx="617" cy="735" r="24" fill="#fff" stroke="#000" stroke-width="5"/>
+        <!-- Foreground Gaming Chair (Left) -->
+        <rect x="145" y="340" width="140" height="240" rx="45" fill="#fff" stroke="#000" stroke-width="8"/>
+        <rect x="175" y="385" width="80" height="45" rx="12" fill="#fff" stroke="#000" stroke-width="6"/>
+        <rect x="135" y="560" width="165" height="55" rx="22" fill="#fff" stroke="#000" stroke-width="8"/>
+        <rect x="200" y="615" width="30" height="95" fill="#fff" stroke="#000" stroke-width="7"/>
+        <line x1="215" y1="710" x2="145" y2="755" stroke="#000" stroke-width="8" stroke-linecap="round"/>
+        <line x1="215" y1="710" x2="285" y2="755" stroke="#000" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="145" cy="770" r="16" fill="#fff" stroke="#000" stroke-width="6"/>
+        <circle cx="285" cy="770" r="16" fill="#fff" stroke="#000" stroke-width="6"/>
+      </svg>`;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('pagesGrid');
+      grid.innerHTML = '';
+      const title = document.getElementById('bookTitle').value;
+      const subtitle = document.getElementById('bookSubtitle').value;
+      const author = document.getElementById('bookAuthor').value;
+      const pageCount = parseInt(document.getElementById('pageCount').value) || 54;
+      const spineIn = (pageCount * 0.002252).toFixed(3);
+      const fullW = (17.25 + parseFloat(spineIn)).toFixed(3);
+
+      if (activeTab === 'cover') {
+        const cov = document.createElement('div');
+        cov.className = 'cover-card';
+        cov.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h2 style="font-size:18px;">Full Wraparound Cover Spread (${fullW}" × 11.25")</h2>
+              <p style="font-size:12px; color:var(--muted);">Spine Width: ${spineIn}" (${pageCount} pages) • Includes 0.125" Bleed</p>
+            </div>
+          </div>
+          <div class="cover-spread-box">
+            <div class="cover-half">
+              <div>
+                <h3 style="font-size:20px;">${title}</h3>
+                <p style="font-size:13px; color:#cbd5e1; margin-top:6px;">${subtitle}</p>
+                <p style="font-size:12px; color:#94a3b8; margin-top:16px; line-height:1.6;">
+                  • 50 Unique Non-Repeating Pages<br/>
+                  • Crisp Black & White Line Art<br/>
+                  • Large 8.5" × 11" KDP Format
+                </p>
+              </div>
+              <div class="barcode-box">ISBN BARCODE ZONE</div>
+            </div>
+            <div class="cover-spine-bar">${title} — ${author}</div>
+            <div class="cover-half" style="text-align:center; background:#312e81;">
+              <div>
+                <span class="badge">KIDS COLORING & ACTIVITY BOOK</span>
+                <h2 style="font-size:28px; margin-top:12px;">${title}</h2>
+                <p style="font-size:13px; color:#c7d2fe; margin-top:4px;">${subtitle}</p>
+              </div>
+              <div style="background:#fff; color:#000; border-radius:10px; padding:12px; height:58%; display:flex; align-items:center; justify-content:center;">
+                ${buildVectorSVG(PAGES[0])}
+              </div>
+              <div style="font-weight:800; font-size:14px;">By ${author}</div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(cov);
+        return;
+      }
+
+      const list = PAGES.filter(p => p.ch === activeTab);
+      list.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'page-card';
+        const imgUrl = customImages[p.id];
+        const artMarkup = imgUrl ? `<img src="${imgUrl}" alt="${p.title}" />` : buildVectorSVG(p);
+
+        let bottomZone = '';
+        if (p.type === 'trace') {
+          bottomZone = `
+            <div style="margin-top:6px;">
+              <div class="trace-row">${p.word}</div>
+              <div class="trace-row">${p.word.toLowerCase()}</div>
+            </div>
+          `;
+        } else if (p.type === 'story') {
+          bottomZone = `
+            <div style="border:2px solid #000; border-radius:6px; padding:8px; font-size:12px; line-height:1.45; background:#f8fafc;">
+              <b>Story:</b> ${p.story}
+            </div>
+          `;
+        } else if (p.type === 'steps') {
+          bottomZone = `
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; border-top:2px solid #000; padding-top:6px; text-align:center; font-size:10px; font-weight:800;">
+              <div style="border:1.5px solid #000; padding:6px;">1. Base Shape</div>
+              <div style="border:1.5px solid #000; padding:6px;">2. Structure</div>
+              <div style="border:1.5px solid #000; padding:6px;">3. Details</div>
+              <div style="border:1.5px solid #000; padding:6px;">4. Final Ink</div>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="card-top">
+            <span>Page #${p.id} — ${p.title}</span>
+            <span style="color:#4f46e5;">8.5" × 11"</span>
+          </div>
+          <div class="kdp-canvas-wrap">
+            <div class="kdp-frame">
+              <div class="kdp-header-strip">
+                <span>${title}</span>
+                <span>PAGE ${p.id}</span>
+              </div>
+              <div class="kdp-art-zone" id="art-zone-${p.id}">
+                ${artMarkup}
+              </div>
+              ${bottomZone}
+              <div class="kdp-footer-strip">
+                <span>${p.title}</span>
+                <span>KDP Safe Margin 0.50"</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <input type="file" id="file-${p.id}" accept="image/*" style="display:none" onchange="uploadSingle(${p.id}, event)" />
+            <button class="btn btn-secondary" style="padding:6px 10px; font-size:11px;" onclick="document.getElementById('file-${p.id}').click()">Upload Image</button>
+            <button class="btn" style="padding:6px 10px; font-size:11px;" onclick="generateAIForPage(${p.id})">Render AI Line-Art</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function uploadSingle(id, e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        customImages[id] = ev.target.result;
+        renderGrid();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleBulkFiles(e) {
+      const files = Array.from(e.target.files);
+      files.forEach((f, idx) => {
+        if (idx >= 50) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          customImages[idx + 1] = ev.target.result;
+          if (idx === files.length - 1) renderGrid();
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+
+    async function generateAIForPage(id) {
+      const p = PAGES.find(x => x.id === id);
+      if (!p) return;
+      const zone = document.getElementById(`art-zone-${id}`);
+      if (zone) zone.innerHTML = `<div style="font-weight:800; color:#4f46e5;">Generating Crisp Line-Art...</div>`;
+      const prompt = `Kids coloring book page of ${p.item}, cozy 3D perspective kawaii vector line art, thick bold black outlines on pure white background, no shading, no grayscale`;
+      const apiKey = document.getElementById('apiKey').value.trim();
+
+      try {
+        const res = await fetch('/api/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, apiKey })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const parts = data?.candidates?.[0]?.content?.parts || [];
+          const imgPart = parts.find(pt => pt.inlineData);
+          if (imgPart) {
+            customImages[id] = `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
+            renderGrid();
+            return;
+          }
+        }
+      } catch (err) {}
+
+      // Fallback direct Flux line-art stream
+      const encoded = encodeURIComponent(prompt);
+      customImages[id] = `https://image.pollinations.ai/prompt/${encoded}?width=850&height=1100&seed=${id * 137}&nologo=true`;
+      renderGrid();
+    }
+
+    function renderCurrentChapterAI() {
+      const list = PAGES.filter(p => p.ch === activeTab);
+      list.forEach(p => generateAIForPage(p.id));
+    }
+
+    function exportFullBookPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'in', format: [8.5, 11.0] });
+      const title = document.getElementById('bookTitle').value;
+
+      // Page 1: Belongs To
+      doc.setLineWidth(0.04);
+      doc.rect(0.5, 0.5, 7.5, 10.0);
+      doc.setFontSize(24);
+      doc.text('THIS BOOK BELONGS TO:', 4.25, 4.2, { align: 'center' });
+      doc.line(1.8, 5.2, 6.7, 5.2);
+
+      // Pages 1..50
+      PAGES.forEach(p => {
+        doc.addPage([8.5, 11.0]);
+        doc.setLineWidth(0.04);
+        doc.rect(0.5, 0.5, 7.5, 10.0);
+        doc.setFontSize(11);
+        doc.text(title.toUpperCase(), 0.7, 0.85);
+        doc.text(`PAGE ${p.id}`, 7.8, 0.85, { align: 'right' });
+        doc.line(0.5, 1.0, 8.0, 1.0);
+        doc.setFontSize(16);
+        doc.text(p.title, 4.25, 1.5, { align: 'center' });
+        if (p.type === 'trace') {
+          doc.setFontSize(22);
+          doc.text(p.word, 4.25, 9.2, { align: 'center' });
+        } else if (p.type === 'story') {
+          doc.setFontSize(11);
+          doc.text(p.story, 4.25, 9.2, { align: 'center', maxWidth: 6.5 });
+        }
+      });
+
+      doc.save(`${title.replace(/\s+/g, '_')}_KDP_8.5x11.pdf`);
+    }
+
+    renderGrid();
+  </script>
+</body>
+</html>
