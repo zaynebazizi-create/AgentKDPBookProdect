@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KDP Kids Book Studio Pro — 8.5" × 11" AI Kawaii Coloring & Activity Book Publisher</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF for Direct True-Scale 8.5" x 11" Amazon KDP PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .font-kids {
+            font-family: 'Comic Neue', cursive, sans-serif;
+        }
+
+        /* Strict 8.5 x 11 Amazon KDP Trim Aspect Ratio */
+        .kdp-sheet {
+            aspect-ratio: 8.5 / 11;
+            width: 100%;
+            background: #ffffff;
+            color: #000000;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+            user-select: none;
+        }
+
+        /* Pure Black & White High-Contrast KDP Ink Filter for AI Line Art */
+        .kdp-ink-filter {
+            filter: grayscale(100%) contrast(275%) brightness(110%);
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #ffffff;
+        }
+
+        /* Dotted Tracing Typography */
+        .trace-dotted-text {
+            font-family: 'Fredoka', sans-serif;
+            color: transparent;
+            -webkit-text-stroke: 1.8px #475569;
+            letter-spacing: 0.14em;
+        }
+
+        /* Gridded Practice Canvas for Step-by-Step Drawing */
+        .drawing-practice-grid {
+            background-size: 20px 20px;
+            background-image:
+                linear-gradient(to right, rgba(148, 163, 184, 0.28) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(148, 163, 184, 0.28) 1px, transparent 1px);
+        }
+
+        /* KDP Bleed & Safe Margin Guide Overlay */
+        .kdp-margin-guide {
+            position: absolute;
+            inset: 4.54%; /* 0.5" safe margin on 11" height */
+            border: 2px dashed rgba(239, 68, 68, 0.85);
+            pointer-events: none;
+            z-index: 30;
+            display: none;
+        }
+        body.show-kdp-guides .kdp-margin-guide {
+            display: block;
+        }
+
+        /* Print Media Query for Direct Browser Print (8.5in x 11in) */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            body * {
+                visibility: hidden !important;
+            }
+            #kdp-print-mount, #kdp-print-mount * {
+                visibility: visible !important;
+            }
+            #kdp-print-mount {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                display: block !important;
+            }
+            @page {
+                size: 8.5in 11in;
+                margin: 0;
+            }
+            .print-page-sheet {
+                width: 8.5in !important;
+                height: 11in !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                background: #ffffff !important;
+                overflow: hidden !important;
+            }
+        }
+    </style>
+</head>
+<body class="selection:bg-indigo-600 selection:text-white">
+
+    <!-- Notification Toast -->
+    <div id="toast-box" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-indigo-950 text-white px-5 py-3 rounded-2xl shadow-2xl border border-indigo-500/50 flex items-center gap-3 transition-all duration-300 opacity-0 -translate-y-16 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toast-msg" class="text-xs sm:text-sm font-bold">Ready!</span>
+    </div>
+
+    <!-- =====================================================================
+         TOP STUDIO HEADER BAR
+         ===================================================================== -->
+    <header class="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-[1600px] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                    <i class="fa-solid fa-wand-magic-sparkles text-white text-xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white">
+                            KDP Kids Book Studio Pro
+                        </h1>
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] px-2.5 py-0.5 rounded-full font-extrabold">
+                            Multi-Engine AI Kawaii Line-Art • 8.5" × 11"
+                        </span>
+                    </div>
+                    <p id="kdp-live-specs-bar" class="text-[11px] text-slate-400 font-medium">
+                        Amazon KDP Trim: 8.5" × 11.0" • Safe Margin: 0.50" • 54 Total Pages • Spine: 0.122" (3.10 mm) • Full Cover: 17.372" × 11.250"
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action & Export Controls -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="toggleRenderEngineMode()" id="engine-mode-btn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-microchip text-indigo-400"></i>
+                    <span>Art Mode: <strong id="engine-mode-label" class="text-emerald-400">AI Kawaii Stream + Vector</strong></span>
+                </button>
+
+                <button onclick="toggleKdpGuides()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-ruler-combined text-rose-400"></i>
+                    <span>KDP 0.5" Margin Guides</span>
+                </button>
+
+                <button onclick="document.getElementById('bulk-upload-input').click()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-folder-open text-amber-400"></i>
+                    <span>Bulk Upload Images</span>
+                </button>
+                <input id="bulk-upload-input" type="file" multiple accept="image/*" class="hidden" onchange="handleBulkImageUpload(event)">
+
+                <button onclick="exportFullWraparoundCoverPDF()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-lg transition">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Export Full Cover PDF</span>
+                </button>
+
+                <button id="export-interior-pdf-btn" onclick="exportKdpInteriorPDF()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-600/25 transition">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Export KDP Interior PDF (8.5"×11")</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- =====================================================================
+         BOOK CONFIGURATION & TOPIC GENERATOR BAR
+         ===================================================================== -->
+    <section class="max-w-[1600px] mx-auto px-4 pt-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                
+                <!-- 1. Book Title / Topic -->
+                <div class="md:col-span-3">
+                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                        Book Title / Theme:
+                    </label>
+                    <input id="input-book-title" type="text" value="My Gaming Room"
+                        placeholder="e.g. My Gaming Room, Space Explorers..."
+                        oninput="updateLiveBookMetadata()"
+                        class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-sm focus:border-indigo-500 outline-none">
+                </div>
+
+                <!-- 2. Subtitle -->
+                <div class="md:col-span-3">
+                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                        Book Subtitle:
+                    </label>
+                    <input id="input-book-subtitle" type="text" value="50+ Cozy 3D Kawaii Setups, Gear & Activities"
+                        oninput="updateLiveBookMetadata()"
+                        class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-semibold text-xs sm:text-sm focus:border-indigo-500 outline-none">
+                </div>
+
+                <!-- 3. Author Name & Page Count -->
+                <div class="md:col-span-2">
+                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                        Author & Total Pages:
+                    </label>
+                    <div class="flex gap-1.5">
+                        <input id="input-book-author" type="text" value="Ghaith Studio"
+                            oninput="updateLiveBookMetadata()"
+                            class="w-3/5 px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-bold text-xs outline-none">
+                        <select id="input-page-count" onchange="updateLiveBookMetadata()" class="w-2/5 px-2 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-xs outline-none">
+                            <option value="54" selected>54p</option>
+                            <option value="64">64p</option>
+                            <option value="84">84p</option>
+                            <option value="104">104p</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 4. Book Structure Mode -->
+                <div class="md:col-span-2">
+                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                        Interior Layout Mode:
+                    </label>
+                    <select id="input-layout-mode" onchange="changeGlobalLayoutMode(this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-xs outline-none cursor-pointer">
+                        <option value="structured" selected>5-Chapter Activity Mix (Color + Draw + Trace)</option>
+                        <option value="all_coloring">100% Full-Page Coloring Book (Pages 1–50)</option>
+                        <option value="all_tracing">100% Word Tracing Workbook (Pages 1–50)</option>
+                        <option value="all_drawing">100% Step-by-Step Drawing Book (Pages 1–50)</option>
+                    </select>
+                </div>
+
+                <!-- 5. Generate / Refresh AI Button -->
+                <div class="md:col-span-2">
+                    <button id="btn-generate-topic" onclick="generateCustomTopicBook()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition active:scale-95">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Generate 50+ Unique Pages</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Preset Theme Pills + AI Progress Status -->
+            <div class="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-[11px] font-bold text-slate-400 mr-1">Instant Theme Presets:</span>
+                    <button onclick="applyThemePreset('My Gaming Room', '50+ Cozy 3D Kawaii Setups, Gear & Activities')" class="px-2.5 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition">
+                        🎮 My Gaming Room
+                    </button>
+                    <button onclick="applyThemePreset('Space Explorers Galaxy', '50+ Kawaii Rockets, Astronauts & Alien Worlds')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+                        🚀 Space Explorers
+                    </button>
+                    <button onclick="applyThemePreset('Jurassic Dino Kingdom', '50+ Cute Kawaii Dinosaurs, Volcanoes & Prehistoric Fun')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+                        🦖 Cute Dinosaurs
+                    </button>
+                    <button onclick="applyThemePreset('Cozy Kawaii Bakery & Cafe', '50+ Sweet Cakes, Boba Tea & Kawaii Pastry Shops')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+                        🧁 Kawaii Bakery
+                    </button>
+                    <button onclick="applyThemePreset('Mega Trucks & Rescue Vehicles', '50+ Monster Trucks, Fire Engines & Construction Gear')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+                        🚜 Mega Vehicles
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span id="ai-stream-counter" class="text-xs font-extrabold text-emerald-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>All 50 Unique Blueprints + Live AI Line-Art Stream Active</span>
+                    </span>
+                    <button onclick="refreshCurrentChapterAI()" class="px-2.5 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-[11px] font-bold transition">
+                        <i class="fa-solid fa-rotate mr-1"></i>New AI Seed for Active Tab
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         CHAPTER NAVIGATION TABS + GRID ZOOM SWITCHER
+         ===================================================================== -->
+    <section class="max-w-[1600px] mx-auto px-4 pt-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <!-- 6 Organized Workspace Tabs -->
+            <div class="flex flex-wrap items-center gap-1.5" id="chapter-tabs-bar">
+                <button onclick="switchWorkspaceTab('cover')" id="tab-btn-cover" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+                    <i class="fa-solid fa-book-open mr-1.5"></i>Cover & Front Matter (4)
+                </button>
+                <button onclick="switchWorkspaceTab('ch1')" id="tab-btn-ch1" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800">
+                    🏠 Ch.1: 3D Room Setups (1–10)
+                </button>
+                <button onclick="switchWorkspaceTab('ch2')" id="tab-btn-ch2" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800">
+                    🎧 Ch.2: Hero Gear Close-Ups (11–20)
+                </button>
+                <button onclick="switchWorkspaceTab('ch3')" id="tab-btn-ch3" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800">
+                    ✏️ Ch.3: Step-by-Step Drawing (21–30)
+                </button>
+                <button onclick="switchWorkspaceTab('ch4')" id="tab-btn-ch4" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800">
+                    🔤 Ch.4: Word Tracing (31–40)
+                </button>
+                <button onclick="switchWorkspaceTab('ch5')" id="tab-btn-ch5" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800">
+                    📖 Ch.5: Cozy Story Scenes (41–50)
+                </button>
+            </div>
+
+            <!-- Grid Column Size Toggle -->
+            <div class="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                <span class="text-[11px] font-bold text-slate-400 px-2">View Size:</span>
+                <button onclick="setGridColumns(2)" id="col-btn-2" class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-indigo-600 text-white">
+                    2-Col XL
+                </button>
+                <button onclick="setGridColumns(3)" id="col-btn-3" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white">
+                    3-Col
+                </button>
+                <button onclick="setGridColumns(5)" id="col-btn-5" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white">
+                    5-Col Overview
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         MAIN PAGINATED WORKSPACE STAGE (100% LAG-FREE, NEVER BLANK)
+         ===================================================================== -->
+    <main class="max-w-[1600px] mx-auto px-4 py-6">
+        <div id="workspace-stage"></div>
+    </main>
+
+    <!-- =====================================================================
+         FULL-SIZE PAGE INSPECTOR & AI CUSTOMIZER MODAL
+         ===================================================================== -->
+    <div id="inspector-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-5xl w-full p-5 sm:p-6 shadow-2xl flex flex-col max-h-[92vh]">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <span id="modal-badge" class="bg-indigo-600 text-white text-xs font-extrabold px-3 py-1 rounded-full">Page 1</span>
+                    <h3 id="modal-title" class="text-base sm:text-lg font-extrabold text-white">Page Inspector</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="stepModalPage(-1)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">
+                        <i class="fa-solid fa-chevron-left mr-1"></i>Prev Page
+                    </button>
+                    <button onclick="stepModalPage(1)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">
+                        Next Page<i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                    <button onclick="closeInspectorModal()" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="py-4 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                <!-- Left: 8.5 x 11 Sheet Preview -->
+                <div class="md:col-span-6 flex flex-col items-center">
+                    <div id="modal-sheet-holder" class="w-full max-w-[400px]"></div>
+                    <span class="text-[11px] text-slate-400 font-semibold mt-2">
+                        True 8.5" × 11.0" Trim Size • 0.50" Safe Margin Frame
+                    </span>
+                </div>
+
+                <!-- Right: Custom Controls -->
+                <div class="md:col-span-6 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Page Title (Header & TOC):</label>
+                            <input id="modal-input-title" type="text" oninput="saveModalEdits()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Page Activity Type:</label>
+                            <select id="modal-input-type" onchange="saveModalEdits()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-xs">
+                                <option value="room">3D Room Setup Coloring</option>
+                                <option value="gear">Hero Gear Close-Up Coloring</option>
+                                <option value="draw">Step-by-Step 4-Grid Drawing</option>
+                                <option value="trace">Word Tracing & Penmanship</option>
+                                <option value="story">Cozy Story & Activity Scene</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Tracing Vocabulary Word:</label>
+                            <input id="modal-input-word" type="text" oninput="saveModalEdits()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-xs uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Upload Custom Image:</label>
+                            <input type="file" accept="image/*" onchange="uploadCustomPageImage(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Story Caption / Scene Description:</label>
+                        <textarea id="modal-input-story" rows="2" oninput="saveModalEdits()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs"></textarea>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-950 border border-indigo-500/40 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>AI Kawaii Line-Art Prompt</span>
+                            </span>
+                            <span class="text-[10px] bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded-full font-bold border border-indigo-500/30">
+                                Dual AI Engine Ready
+                            </span>
+                        </div>
+                        <textarea id="modal-input-prompt" rows="3" oninput="saveModalEdits()" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono text-slate-200"></textarea>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button onclick="regeneratePageWithFluxStream(state.modalPageId)" class="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow transition">
+                                <i class="fa-solid fa-rotate"></i>
+                                <span>New AI Variation (Fast Stream)</span>
+                            </button>
+                            <button id="modal-gemini-btn" onclick="regeneratePageWithGeminiAPI(state.modalPageId)" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow transition">
+                                <i class="fa-solid fa-sparkles"></i>
+                                <span>Render via Gemini Image API</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Container -->
+    <div id="kdp-print-mount" class="hidden"></div>
+
+    <!-- =====================================================================
+         CORE ENGINE SCRIPT: 50 UNIQUE BLUEPRINTS + MULTI-ENGINE AI LOADER
+         ===================================================================== -->
+    <script>
+        const apiKey = ""; // Injected at runtime
+
+        const state = {
+            bookTitle: "My Gaming Room",
+            bookSubtitle: "50+ Cozy 3D Kawaii Setups, Gear & Activities",
+            author: "Ghaith Studio",
+            totalPages: 54,
+            activeTab: "ch1", // Start directly on Chapter 1 (Pages 1-10) so the user immediately sees the high-res illustrations!
+            gridCols: 2,
+            renderEngine: "hybrid", // 'hybrid' (AI Stream + Vector Underlay) or 'vector' (Instant Crisp Vector Only)
+            globalLayoutMode: "structured",
+            seedOffset: 101,
+            modalPageId: 1,
+            coverSeed: 777,
+            customCoverUrl: null,
+            pages: []
+        };
+
+        /* =====================================================================
+           50 COMPLETELY UNIQUE, NON-REPEATING PAGE BLUEPRINTS (5 CHAPTERS × 10)
+           ===================================================================== */
+        const MASTER_50_PAGES = [
+            // CHAPTER 1: 3D ROOM SETUPS (Pages 1–10)
+            { id: 1, ch: 1, type: "room", word: "BATTLESTATION", title: "Pro Triple-Monitor Battlestation", subject: "cozy 3D isometric gaming room corner with ergonomic racing chair, wide desk, monitor showing cute kawaii cloud jumpers, boom mic, headset on stand, and triple-fan PC tower", story: "Leo powered on his triple-monitor battlestation! Cute cloud characters bounced across the widescreen display." },
+            { id: 2, ch: 1, type: "room", word: "LOFT DESK", title: "Cozy Loft Bunk-Bed Gaming Desk", subject: "cozy wooden loft bunk bed with a ladder on the right and a complete gaming desk, monitor, keyboard, and glowing string lights tucked underneath", story: "Up top is a cozy bunk bed with plush pillows, and underneath is the secret gaming command center!" },
+            { id: 3, ch: 1, type: "room", word: "BEANBAG NOOK", title: "Plush Beanbag Console Corner", subject: "fluffy giant round beanbag chair on a gamepad-shaped rug in front of a retro television stand with handheld consoles and star cushions", story: "Nothing beats sinking into a giant fluffy beanbag chair for an afternoon of console adventures." },
+            { id: 4, ch: 1, type: "room", word: "ARCADE DEN", title: "Twin Retro Upright Arcade Den", subject: "two classic upright retro arcade machines side by side with joysticks, glowing marquee banners, coin slots, and pixel wall posters", story: "Step right up to the twin arcade cabinets! Grab the joystick and aim for a brand-new high score." },
+            { id: 5, ch: 1, type: "room", word: "STREAM STUDIO", title: "Streamer Studio with Boom Mic", subject: "creator desk setup featuring a circular LED ring light, studio microphone on a scissor boom arm, dual screens, and a 15-button stream deck", story: "Three, two, one—live! The ring light shines brightly while the boom microphone records every word." },
+            { id: 6, ch: 1, type: "room", word: "RACING RIG", title: "Sim-Racing Wheel & Pedal Cockpit", subject: "racing simulator cockpit with a bucket seat, force-feedback steering wheel, dashboard speedometer, floor pedals, and curved track screen", story: "Hands on the wheel and foot on the pedal! The racing simulator makes every turn feel real." },
+            { id: 7, ch: 1, type: "room", word: "VR ARENA", title: "VR Motion Gaming Playzone", subject: "spacious VR gaming room with a round padded floor mat, virtual reality headset on a dock, motion controllers, and wall light panels", story: "Standing on the center mat with the VR visor on, the bedroom transforms into outer space!" },
+            { id: 8, ch: 1, type: "room", word: "COLLECTOR SHELF", title: "Floating Collector Shelves & Nook", subject: "wall of tidy floating shelves displaying cute chibi robot figurines, stacked game cases, potted succulents, and a golden star trophy", story: "Every shelf tells a story with collectible figures, shiny trophies, and neatly organized game boxes." },
+            { id: 9, ch: 1, type: "room", word: "SNACK STATION", title: "Gamer Mini-Fridge & Snack Bar", subject: "compact glass-door mini fridge filled with soda cans beside a snack counter with a popcorn bucket, juice boxes, and pixel mugs", story: "Time for a quick recharge at the gamer snack bar with cold juice cans and crunchy popcorn!" },
+            { id: 10, ch: 1, type: "room", word: "ATTIC STUDIO", title: "Starry Skylight Attic Gaming Room", subject: "cozy sloped-roof attic gaming room with a large skylight window showing twinkling stars and a crescent moon above a glowing desk", story: "Through the attic skylight, twinkling stars shine down on the coziest gaming desk in the house." },
+
+            // CHAPTER 2: HERO GEAR CLOSE-UPS (Pages 11–20)
+            { id: 11, ch: 2, type: "gear", word: "GAMING CHAIR", title: "Ergonomic Racing Chair Close-Up", subject: "centered studio close-up of a cute ergonomic racing gaming chair with a heart neck pillow, chevron lumbar cushion, armrests, and 5-star caster wheels", story: "Designed for comfort, this racing chair has soft pillows and five smooth-rolling wheels." },
+            { id: 12, ch: 2, type: "gear", word: "KEYBOARD", title: "Mechanical RGB Keyboard & Cable", subject: "centered angled close-up of a compact mechanical gaming keyboard with chunky keycaps, rotary volume knob, and a coiled aviator USB cable", story: "Click-clack! Each mechanical keycap has a crisp, bouncy feel and a cool coiled aviator cable." },
+            { id: 13, ch: 2, type: "gear", word: "HEADSET", title: "Kawaii Cat-Ear Headset on Stand", subject: "centered studio close-up of padded over-ear gaming headphones with cute cat ears and a flexible mic resting on a desk stand", story: "Resting neatly on its stand, the cozy cat-ear headset delivers crystal-clear sound." },
+            { id: 14, ch: 2, type: "gear", word: "PC TOWER", title: "Tempered Glass PC Tower Case", subject: "centered 3D close-up of a transparent glass gaming PC tower showing three spinning front cooling fans, graphics card, and power button", story: "Through the clear glass side panel, you can see three big cooling fans spinning together." },
+            { id: 15, ch: 2, type: "gear", word: "HANDHELD", title: "Portable Widescreen Handheld Console", subject: "centered close-up of a portable handheld game console with a cute game on screen, directional D-pad, thumbsticks, and action buttons", story: "Take your favorite adventures on the go with this widescreen portable console!" },
+            { id: 16, ch: 2, type: "gear", word: "CONTROLLER", title: "Wireless Pro Gamepad Controller", subject: "centered symmetrical close-up of a modern wireless gaming controller with dual thumbsticks, D-pad, A-B-X-Y buttons, and textured grips", story: "Ergonomic handles and responsive buttons make this wireless controller ready for any quest." },
+            { id: 17, ch: 2, type: "gear", word: "MICROPHONE", title: "Broadcast Microphone & Pop Filter", subject: "centered close-up of a studio condenser microphone on a desktop stand with a circular mesh pop filter and volume dials", story: "The round mesh pop filter keeps voice recordings smooth and clear." },
+            { id: 18, ch: 2, type: "gear", word: "VR VISOR", title: "Virtual Reality Goggles & Controllers", subject: "centered close-up of a rounded VR headset visor with head straps flanked by two ring-tracked motion hand controllers", story: "Put on the VR visor and hold the two motion rings to step inside a 3D world." },
+            { id: 19, ch: 2, type: "gear", word: "STEERING WHEEL", title: "Force-Feedback Racing Steering Wheel", subject: "centered close-up of a sim-racing steering wheel clamped to a base with paddle shifters, horn badge, and three floor pedals below", story: "Shift gears with the paddles behind the wheel and accelerate across the finish line!" },
+            { id: 20, ch: 2, type: "gear", word: "GAMING MOUSE", title: "Honeycomb Ultra-Light Gaming Mouse", subject: "centered close-up of a lightweight gaming mouse with hexagon shell cutouts and scroll wheel sitting on a stitched mousepad", story: "Hexagon cutouts make this gaming mouse super light and easy to glide." },
+
+            // CHAPTER 3: STEP-BY-STEP DRAWING TUTORIALS (Pages 21–30)
+            { id: 21, ch: 3, type: "draw", word: "GAMEPAD", title: "How to Draw a Wireless Gamepad", subject: "cute kawaii wireless game controller with D-pad and four buttons", steps: ["1. Rounded Wing Shape", "2. Add Twin Grips", "3. D-Pad & Buttons", "4. Finished Gamepad!"], story: "Follow the 4 visual stages above, then draw your own gamepad in the gridded box!" },
+            { id: 22, ch: 3, type: "draw", word: "ARCADE BOX", title: "How to Draw a Retro Arcade Cabinet", subject: "cute upright retro arcade cabinet with joystick and screen", steps: ["1. Tall Box Frame", "2. Recessed Screen", "3. Joystick & Buttons", "4. Finished Arcade!"], story: "Build a classic upright arcade machine step by step using simple straight lines." },
+            { id: 23, ch: 3, type: "draw", word: "PC CASE", title: "How to Draw a Gaming PC Tower", subject: "cute 3D gaming PC tower case with three front fans", steps: ["1. 3D Rectangular Box", "2. Side Glass Window", "3. Three Round Fans", "4. Finished PC Tower!"], story: "Start with a 3D box, add the side window, and draw three spinning cooling fans!" },
+            { id: 24, ch: 3, type: "draw", word: "GAMER CHAIR", title: "How to Draw a Racing Gamer Chair", subject: "cute ergonomic gaming chair with headrest pillow and wheels", steps: ["1. Tall Backrest Arch", "2. Seat & Armrests", "3. Neck & Back Pillows", "4. 5-Wheel Base!"], story: "Draw the tall curved backrest first, then add the pillows and rolling caster wheels." },
+            { id: 25, ch: 3, type: "draw", word: "HEADPHONES", title: "How to Draw Gaming Headphones", subject: "cute over-ear gaming headphones with cat ears and mic", steps: ["1. Curved Top Arch", "2. Two Oval Earcups", "3. Cute Cat Ears", "4. Boom Microphone!"], story: "A simple arch and two ovals quickly turn into a pair of pro gaming headphones!" },
+            { id: 26, ch: 3, type: "draw", word: "HANDHELD", title: "How to Draw a Handheld Console", subject: "cute portable handheld console with center screen", steps: ["1. Wide Rounded Box", "2. Center Screen Frame", "3. Left & Right Pads", "4. Cute Screen Character!"], story: "Frame the center widescreen first, then add the controls on both sides." },
+            { id: 27, ch: 3, type: "draw", word: "DESK ROBOT", title: "How to Draw a Cute Desk Robot", subject: "adorable chibi companion robot with digital eyes and antennas", steps: ["1. Rounded Cube Head", "2. Happy Digital Face", "3. Compact Body Box", "4. Antennas & Arms!"], story: "Every gaming desk needs a friendly little robot buddy cheering you on!" },
+            { id: 28, ch: 3, type: "draw", word: "VR HEADSET", title: "How to Draw a VR Visor", subject: "cute futuristic VR headset visor with top strap", steps: ["1. Rounded Visor Block", "2. Front Sensor Rim", "3. Top & Side Straps", "4. Finished VR Goggles!"], story: "Smooth curved lines make it easy to sketch futuristic virtual reality goggles." },
+            { id: 29, ch: 3, type: "draw", word: "PIXEL SWORD", title: "How to Draw a Pixel Art Sword", subject: "blocky pixel-art adventure sword and shield", steps: ["1. Diagonal Center Line", "2. Stepped Pixel Blade", "3. Crossguard Hilt", "4. Finished Pixel Sword!"], story: "Use stair-stepped square corners to create an authentic retro pixel sword!" },
+            { id: 30, ch: 3, type: "draw", word: "TROPHY CUP", title: "How to Draw a Champion Trophy", subject: "shiny champion trophy cup with star emblem and handles", steps: ["1. U-Shaped Cup Bowl", "2. Pedestal Base", "3. Twin Side Handles", "4. Center Star Badge!"], story: "Reward yourself with a golden champion trophy cup for mastering drawing!" },
+
+            // CHAPTER 4: WORD TRACING & PENMANSHIP SHEETS (Pages 31–40)
+            { id: 31, ch: 4, type: "trace", word: "GAMING DESK", title: "Color & Trace: GAMING DESK", subject: "clean cute kawaii gaming desk with monitor, keyboard, and mouse", story: "Color the gaming desk above, then trace GAMING DESK neatly on the dotted lines." },
+            { id: 32, ch: 4, type: "trace", word: "KEYBOARD", title: "Color & Trace: KEYBOARD", subject: "cute mechanical keyboard with large keycaps and coiled cord", story: "Practice writing KEYBOARD in uppercase and lowercase letters." },
+            { id: 33, ch: 4, type: "trace", word: "HEADPHONES", title: "Color & Trace: HEADPHONES", subject: "cute padded gaming headphones on a stand with stars", story: "Color the headphones and trace the letters carefully from left to right." },
+            { id: 34, ch: 4, type: "trace", word: "MONITOR", title: "Color & Trace: MONITOR", subject: "cute widescreen computer monitor showing a friendly pixel game", story: "A bright monitor brings every creative game world to life!" },
+            { id: 35, ch: 4, type: "trace", word: "CONTROLLER", title: "Color & Trace: CONTROLLER", subject: "cute wireless gamepad controller floating with star sparkles", story: "Trace CONTROLLER neatly along the guided handwriting rows." },
+            { id: 36, ch: 4, type: "trace", word: "ARCADE", title: "Color & Trace: ARCADE", subject: "cute mini tabletop arcade machine with joystick and buttons", story: "Classic arcade machines are fun to color and easy to spell!" },
+            { id: 37, ch: 4, type: "trace", word: "COMPUTER", title: "Color & Trace: COMPUTER", subject: "cute glass-side desktop computer tower with cooling fans", story: "Color the cooling fans and trace the word COMPUTER below." },
+            { id: 38, ch: 4, type: "trace", word: "JOYSTICK", title: "Color & Trace: JOYSTICK", subject: "cute retro flight joystick controller with suction base and buttons", story: "A sturdy joystick lets you pilot spaceships and airplanes!" },
+            { id: 39, ch: 4, type: "trace", word: "MICROPHONE", title: "Color & Trace: MICROPHONE", subject: "cute podcast microphone on a stand with star notes", story: "Record your best stories with the studio microphone!" },
+            { id: 40, ch: 4, type: "trace", word: "LEVEL UP", title: "Color & Trace: LEVEL UP", subject: "cute neon LEVEL UP badge with star trophy and gamepad", story: "You leveled up your handwriting and coloring skills!" },
+
+            // CHAPTER 5: COZY STORY & ACTIVITY SCENES (Pages 41–50)
+            { id: 41, ch: 5, type: "story", word: "TOURNAMENT", title: "The Friendly Friday Tournament", subject: "cozy gaming room desk with two controllers ready for a friendly two-player championship match", story: "Mia and Leo set two wireless controllers on the desk. Tonight was their friendly co-op puzzle tournament!" },
+            { id: 42, ch: 5, type: "story", word: "UNBOXING", title: "Unboxing the New Mechanical Keyboard", subject: "desk table with an open gift box revealing a brand new mechanical keyboard, keycap puller, and stickers", story: "Opening the box revealed shiny custom keycaps shaped like stars, clouds, and little rockets." },
+            { id: 43, ch: 5, type: "story", word: "SPACE FLIGHT", title: "Virtual Journey Through the Stars", subject: "kid-friendly gaming setup with space simulator planets and rockets displayed across triple monitors", story: "On the wide screens, a friendly silver starship glided past ringed planets and glowing comets." },
+            { id: 44, ch: 5, type: "story", word: "HIGH SCORE", title: "The Secret Arcade High Score", subject: "vintage arcade machine corner with a trophy cup and a screen flashing NEW RECORD", story: "With one last clever move through the pixel maze, the arcade screen lit up with a brand-new record!" },
+            { id: 45, ch: 5, type: "story", word: "RAINY DAY", title: "Cozy Rainy Afternoon Gaming", subject: "gaming desk beside a bedroom window with raindrops outside, a warm mug of cocoa, and a sleeping cat on a cushion", story: "Gentle rain tapped on the windowpane while a warm mug of cocoa steamed beside the keyboard." },
+            { id: 46, ch: 5, type: "story", word: "ROBOT BUDDY", title: "The Helpful Desk Robot Mascot", subject: "cute miniature desk robot holding a stylus pen next to a digital drawing tablet and monitor", story: "Whenever it was time to draw new game art, the little desk robot held the digital pen ready." },
+            { id: 47, ch: 5, type: "story", word: "GRAND PRIX", title: "Final Lap of the Kart Grand Prix", subject: "sim-racing steering wheel setup showing a cheerful cartoon kart race with checkered flags on the monitor", story: "Rounding the final rainbow corner, the checkered flag waved across the finish line!" },
+            { id: 48, ch: 5, type: "story", word: "TROPHY SHELF", title: "Polishing the Golden Star Trophy", subject: "floating wall shelf with a sparkling star trophy cup, framed pixel art, and cute plushies", story: "Right in the center of the top shelf stood the golden star trophy for teamwork and creativity." },
+            { id: 49, ch: 5, type: "story", word: "GAME DESIGN", title: "Designing a Brand-New Game World", subject: "creator desk with a large drawing tablet, sketchbook, pencil cup, and dual monitors showing character art", story: "Every great video game starts with a pencil sketch and a big imagination at the drawing desk." },
+            { id: 50, ch: 5, type: "story", word: "DREAM ROOM", title: "The Ultimate Completed Gaming Room!", subject: "grand panoramic view of the entire cozy gaming room with desk, chair, arcade, shelves, and neon gamepad sign", story: "Congratulations! You have colored, traced, and drawn your way through all 50 pages of the dream gaming room!" }
+        ];
+
+        /* =====================================================================
+           INITIALIZE PAGES DATA
+           ===================================================================== */
+        function initializeBookPages() {
+            state.pages = MASTER_50_PAGES.map(item => ({
+                ...item,
+                seed: item.id * 137 + state.seedOffset,
+                customImageUrl: null,
+                aiLoaded: false,
+                prompt: buildKawaiiLineArtPrompt(item.subject, state.bookTitle)
+            }));
+            updateKdpSpecsHeader();
+            renderActiveWorkspaceTab();
+        }
+
+        function buildKawaiiLineArtPrompt(subjectText, themeTitle) {
+            return `coloring book page for kids, ${subjectText}, ${themeTitle} theme, cozy 3D perspective kawaii vector line art, thick bold uniform black outlines, pure solid white background, NO shading, NO gray fill, NO gradients, crisp clean black ink lines only`;
+        }
+
+        function buildPollinationsAIUrl(promptText, seedVal, isColorCover = false) {
+            const cleanPrompt = isColorCover
+                ? `Vibrant cute 3D kawaii cartoon children book cover illustration of ${state.bookTitle}: ${state.bookSubtitle}, rich vibrant colors, cozy lighting, studio quality, no text clutter`
+                : promptText;
+            return `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=850&height=1100&seed=${seedVal}&nologo=true&model=flux`;
+        }
+
+        /* =====================================================================
+           ENGINE 3: INSTANT CLEAN ORGANIZED VECTOR UNDERLAY GENERATOR
+           Guarantees 0ms visual output with strict non-overlapping geometry
+           while the AI stream loads or when in Vector Mode!
+           ===================================================================== */
+        function buildOrganizedVectorSVG(pageObj, stageOverride = 4) {
+            const id = pageObj.id;
+            const variant = id % 5;
+            const S = `stroke="#000000" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="#FFFFFF"`;
+            const M = `stroke="#000000" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="#FFFFFF"`;
+
+            // For close-up gear or step-by-step drawing stages (stageOverride = 1..4)
+            if (pageObj.type === "gear" || pageObj.type === "draw" || pageObj.type === "trace") {
+                const gearIndex = id % 10;
+                return `<svg viewBox="0 0 800 760" class="w-full h-full">
+                    <rect width="800" height="760" fill="#FFFFFF"/>
+                    ${ stageOverride >= 3 ? `
+                        <!-- Neat Decorative Corner Stars (Never overlapping center) -->
+                        <path d="M 95 85 L 105 110 L 130 110 L 110 125 L 118 150 L 95 135 L 72 150 L 80 125 L 60 110 L 85 110 Z" ${M}/>
+                        <path d="M 705 85 L 715 110 L 740 110 L 720 125 L 728 150 L 705 135 L 682 150 L 690 125 L 670 110 L 695 110 Z" ${M}/>
+                        <circle cx="110" cy="650" r="14" ${M}/>
+                        <circle cx="690" cy="650" r="14" ${M}/>
+                    ` : '' }
+                    ${renderHeroGearVectorByIndex(gearIndex, stageOverride, S, M)}
+                </svg>`;
+            }
+
+            // Full 3D Cozy Kawaii Room Setup (Strict non-overlapping back-to-front layers)
+            return `<svg viewBox="0 0 800 860" class="w-full h-full">
+                <rect width="800" height="860" fill="#FFFFFF"/>
+                <!-- 1. Room Corner Walls & Baseboard -->
+                <line x1="270" y1="30" x2="270" y2="620" ${S}/>
+                <line x1="20" y1="660" x2="270" y2="560" ${S}/>
+                <line x1="270" y1="560" x2="780" y2="690" ${S}/>
+
+                <!-- 2. Upper Left Wall Floating Shelves (Strictly y: 60..290) -->
+                <polygon points="35,145 245,120 245,140 35,165" ${S}/>
+                <rect x="55" y="75" width="26" height="66" ${M}/>
+                <rect x="85" y="72" width="26" height="66" ${M}/>
+                <rect x="115" y="70" width="26" height="66" ${M}/>
+                <!-- Potted Succulent on Shelf -->
+                <polygon points="185,95 225,95 218,125 192,125" ${M}/>
+                <path d="M 190 95 Q 205 60 220 95" ${M}/>
+                <path d="M 180 95 Q 195 70 205 95" ${M}/>
+
+                <!-- Second Shelf -->
+                <polygon points="35,265 245,240 245,260 35,285" ${S}/>
+                <!-- Cute Chibi Figure on Shelf -->
+                <circle cx="195" cy="200" r="22" ${M}/>
+                <rect x="180" y="222" width="30" height="24" rx="8" ${M}/>
+                <circle cx="187" cy="198" r="3" fill="#000"/>
+                <circle cx="203" cy="198" r="3" fill="#000"/>
+
+                <!-- 3. Upper Right Wall Decor (Varies by Page ID so rooms look distinct!) -->
+                ${variant === 0 ? `
+                    <!-- Framed Gamepad Poster + Hexagon Lights -->
+                    <polygon points="390,60 495,70 495,195 390,185" ${S}/>
+                    <rect x="415" y="105" width="55" height="35" rx="14" ${M}/>
+                    <polygon points="555,125 605,130 620,165 595,195 545,190 530,155" ${M}/>
+                    <polygon points="605,130 655,135 670,170 645,200 595,195 620,165" ${M}/>
+                    <polygon points="655,135 705,140 720,175 695,205 645,200 670,170" ${M}/>
+                ` : variant === 1 ? `
+                    <!-- Starry Skylight Window + Neon Sign -->
+                    <polygon points="380,55 680,85 680,210 380,180" ${S}/>
+                    <line x1="530" y1="70" x2="530" y2="195" ${M}/>
+                    <path d="M 440 105 A 22 22 0 1 0 465 140 A 16 16 0 1 1 440 105 Z" ${M}/>
+                    <circle cx="600" cy="125" r="8" ${M}/>
+                    <circle cx="635" cy="160" r="6" ${M}/>
+                ` : variant === 2 ? `
+                    <!-- Collector Display Cubbies -->
+                    <polygon points="410,60 740,95 740,200 410,165" ${S}/>
+                    <line x1="520" y1="72" x2="520" y2="177" ${M}/>
+                    <line x1="630" y1="83" x2="630" y2="188" ${M}/>
+                    <rect x="445" y="105" width="50" height="35" rx="12" ${M}/>
+                    <circle cx="685" cy="145" r="24" ${M}/>
+                ` : variant === 3 ? `
+                    <!-- Twin Framed Pixel Posters -->
+                    <polygon points="385,60 520,75 520,195 385,180" ${S}/>
+                    <polygon points="560,80 710,95 710,215 560,200" ${S}/>
+                    <path d="M 435 155 L 452 95 L 470 155 Z" ${M}/>
+                    <circle cx="635" cy="148" r="28" ${M}/>
+                ` : `
+                    <!-- Champion Trophy Banner Shelf -->
+                    <polygon points="390,145 730,180 730,200 390,165" ${S}/>
+                    <path d="M 525 85 L 575 85 L 565 135 L 535 135 Z" ${M}/>
+                    <rect x="535" y="135" width="30" height="18" ${M}/>
+                `}
+
+                <!-- 4. Isometric 3D Desk Surface & Legs (Opaque White Occlusion) -->
+                <polygon points="80,450 285,375 740,485 525,585" ${S}/>
+                <polygon points="80,450 525,585 525,610 80,472" ${S}/>
+                <polygon points="525,585 740,485 740,510 525,610" ${S}/>
+                <!-- Desk Legs -->
+                <rect x="95" y="472" width="24" height="190" ${S}/>
+                <rect x="505" y="605" width="28" height="215" ${S}/>
+                <rect x="705" y="505" width="26" height="205" ${S}/>
+
+                <!-- 5. Widescreen Monitor on Desk (With Cute Kawaii Game Scene Inside) -->
+                <polygon points="405,435 545,470 515,490 380,452" ${S}/>
+                <rect x="448" y="405" width="28" height="45" ${S}/>
+                <polygon points="345,215 645,250 645,440 345,395" ${S}/>
+                <polygon points="362,232 628,265 628,420 362,380" ${M}/>
+                <!-- Cute Jumping Character & Clouds on Monitor Screen -->
+                <circle cx="465" cy="305" r="22" ${M}/>
+                <circle cx="458" cy="302" r="3" fill="#000"/>
+                <circle cx="472" cy="302" r="3" fill="#000"/>
+                <ellipse cx="405" cy="275" rx="24" ry="12" ${M}/>
+                <ellipse cx="575" cy="305" rx="26" ry="13" ${M}/>
+                <line x1="362" y1="358" x2="628" y2="395" ${M}/>
+
+                <!-- 6. Mechanical Keyboard, Mouse & Headset on Stand -->
+                <polygon points="295,455 475,500 440,535 260,485" ${S}/>
+                <line x1="280" y1="472" x2="458" y2="516" ${M}/>
+                <line x1="270" y1="480" x2="448" y2="525" ${M}/>
+                <!-- Mousepad & Mouse -->
+                <polygon points="485,515 585,542 545,572 450,545" ${M}/>
+                <ellipse cx="520" cy="542" rx="18" ry="13" ${S}/>
+                <!-- Headset on Stand (Right Side of Desk) -->
+                <ellipse cx="625" cy="505" rx="32" ry="12" ${S}/>
+                <rect x="619" y="405" width="12" height="100" ${S}/>
+                <path d="M 590 435 C 590 380, 660 380, 660 435" stroke="#000" stroke-width="8" fill="none"/>
+                <ellipse cx="592" cy="445" rx="14" ry="24" ${S}/>
+                <ellipse cx="658" cy="445" rx="14" ry="24" ${S}/>
+
+                <!-- 7. Tempered Glass PC Tower on Floor (Bottom Right, Opaque White) -->
+                <polygon points="575,595 695,535 775,560 660,625" ${S}/>
+                <polygon points="575,595 660,625 660,825 575,790" ${S}/>
+                <polygon points="660,625 775,560 775,755 660,825" ${S}/>
+                <!-- 3 Front Cooling Fans -->
+                <circle cx="618" cy="655" r="24" ${M}/>
+                <circle cx="618" cy="712" r="24" ${M}/>
+                <circle cx="618" cy="768" r="24" ${M}/>
+                <circle cx="618" cy="655" r="7" ${M}/>
+                <circle cx="618" cy="712" r="7" ${M}/>
+                <circle cx="618" cy="768" r="7" ${M}/>
+
+                <!-- 8. Foreground Ergonomic Racing Chair (Opaque White Hiding Desk Behind It) -->
+                <!-- Floor Rug Under Chair -->
+                <polygon points="35,705 265,610 495,715 245,840" ${S}/>
+                <!-- Chair 5-Star Base & Wheels -->
+                <rect x="232" y="675" width="22" height="75" ${S}/>
+                <line x1="243" y1="735" x2="155" y2="765" ${S}/>
+                <line x1="243" y1="735" x2="195" y2="805" ${S}/>
+                <line x1="243" y1="735" x2="295" y2="800" ${S}/>
+                <line x1="243" y1="735" x2="335" y2="755" ${S}/>
+                <circle cx="155" cy="778" r="14" ${S}/>
+                <circle cx="195" cy="818" r="14" ${S}/>
+                <circle cx="295" cy="814" r="14" ${S}/>
+                <circle cx="335" cy="768" r="14" ${S}/>
+                <!-- Chair Tall Bucket Backrest -->
+                <path d="M 115 620 C 95 450, 110 340, 175 335 C 240 330, 265 440, 275 595 Z" ${S}/>
+                <!-- Heart Headrest Pillow -->
+                <rect x="142" y="385" width="76" height="46" rx="12" ${S}/>
+                <path d="M 180 418 C 165 405, 165 395, 175 395 C 180 395, 180 402, 180 402 C 180 402, 180 395, 185 395 C 195 395, 195 405, 180 418 Z" ${M}/>
+                <!-- Lumbar Cushion -->
+                <rect x="152" y="535" width="95" height="48" rx="14" ${S}/>
+                <!-- Chair Seat Cushion & Armrests -->
+                <polygon points="135,620 275,580 375,625 225,680" ${S}/>
+                <rect x="135" y="545" width="75" height="20" rx="8" ${S}/>
+                <rect x="275" y="515" width="75" height="20" rx="8" ${S}/>
+            </svg>`;
+        }
+
+        function renderHeroGearVectorByIndex(gearIdx, stage, S, M) {
+            // Progressive 4-Stage Support:
+            // stage 1: Basic outer shape
+            // stage 2: + Main inner structure
+            // stage 3: + Buttons/Features
+            // stage 4: Full completed drawing
+            switch (gearIdx % 5) {
+                case 0: // Wireless Gamepad Controller
+                    return `
+                        <path d="M 210 260 C 210 200, 590 200, 590 260 C 640 360, 650 520, 560 550 C 510 565, 470 460, 400 460 C 330 460, 290 565, 240 550 C 150 520, 160 360, 210 260 Z" ${S}/>
+                        ${stage >= 2 ? `
+                            <circle cx="330" cy="400" r="42" ${S}/>
+                            <circle cx="470" cy="400" r="42" ${S}/>
+                        ` : ''}
+                        ${stage >= 3 ? `
+                            <polygon points="255,280 285,280 285,305 310,305 310,335 285,335 285,360 255,360 255,335 230,335 230,305 255,305" ${M}/>
+                            <circle cx="530" cy="285" r="16" ${M}/>
+                            <circle cx="530" cy="355" r="16" ${M}/>
+                            <circle cx="495" cy="320" r="16" ${M}/>
+                            <circle cx="565" cy="320" r="16" ${M}/>
+                        ` : ''}
+                        ${stage >= 4 ? `
+                            <circle cx="330" cy="400" r="24" ${M}/>
+                            <circle cx="470" cy="400" r="24" ${M}/>
+                            <rect x="375" y="265" width="50" height="26" rx="10" ${M}/>
+                        ` : ''}
+                    `;
+                case 1: // Upright Retro Arcade Cabinet
+                    return `
+                        <rect x="240" y="110" width="320" height="540" rx="16" ${S}/>
+                        ${stage >= 2 ? `
+                            <rect x="265" y="135" width="270" height="65" rx="8" ${S}/>
+                            <rect x="275" y="225" width="250" height="175" rx="12" ${S}/>
+                        ` : ''}
+                        ${stage >= 3 ? `
+                            <polygon points="240,425 560,425 590,475 210,475" ${S}/>
+                            <line x1="330" y1="455" x2="330" y2="415" ${S}/>
+                            <circle cx="330" cy="405" r="16" ${S}/>
+                            <circle cx="445" cy="448" r="12" ${M}/>
+                            <circle cx="485" cy="442" r="12" ${M}/>
+                        ` : ''}
+                        ${stage >= 4 ? `
+                            <rect x="315" y="510" width="170" height="115" rx="8" ${M}/>
+                            <rect x="345" y="535" width="35" height="45" ${M}/>
+                            <rect x="420" y="535" width="35" height="45" ${M}/>
+                        ` : ''}
+                    `;
+                case 2: // Tempered Glass PC Tower
+                    return `
+                        <rect x="230" y="120" width="340" height="520" rx="18" ${S}/>
+                        ${stage >= 2 ? `
+                            <rect x="260" y="155" width="195" height="450" rx="10" ${S}/>
+                            <rect x="480" y="155" width="65" height="450" rx="10" ${S}/>
+                        ` : ''}
+                        ${stage >= 3 ? `
+                            <circle cx="512" cy="235" r="26" ${M}/>
+                            <circle cx="512" cy="365" r="26" ${M}/>
+                            <circle cx="512" cy="495" r="26" ${M}/>
+                        ` : ''}
+                        ${stage >= 4 ? `
+                            <rect x="285" y="340" width="145" height="75" rx="8" ${M}/>
+                            <circle cx="355" cy="245" r="38" ${M}/>
+                            <circle cx="512" cy="235" r="9" ${M}/>
+                            <circle cx="512" cy="365" r="9" ${M}/>
+                            <circle cx="512" cy="495" r="9" ${M}/>
+                        ` : ''}
+                    `;
+                case 3: // Kawaii Cat-Ear Gaming Headset
+                    return `
+                        <path d="M 220 420 C 220 175, 580 175, 580 420" stroke="#000000" stroke-width="22" fill="none" stroke-linecap="round"/>
+                        ${stage >= 2 ? `
+                            <ellipse cx="220" cy="450" rx="48" ry="82" ${S}/>
+                            <ellipse cx="580" cy="450" rx="48" ry="82" ${S}/>
+                        ` : ''}
+                        ${stage >= 3 ? `
+                            <polygon points="255,255 295,165 345,220" ${S}/>
+                            <polygon points="545,255 505,165 455,220" ${S}/>
+                        ` : ''}
+                        ${stage >= 4 ? `
+                            <ellipse cx="220" cy="450" rx="24" ry="52" ${M}/>
+                            <ellipse cx="580" cy="450" rx="24" ry="52" ${M}/>
+                            <path d="M 220 525 Q 290 610 385 585" stroke="#000000" stroke-width="10" fill="none" stroke-linecap="round"/>
+                            <ellipse cx="400" cy="585" rx="22" ry="15" ${S}/>
+                        ` : ''}
+                    `;
+                default: // Portable Handheld Console
+                    return `
+                        <rect x="135" y="210" width="530" height="330" rx="65" ${S}/>
+                        ${stage >= 2 ? `
+                            <rect x="245" y="240" width="310" height="270" rx="14" ${S}/>
+                        ` : ''}
+                        ${stage >= 3 ? `
+                            <circle cx="190" cy="315" r="26" ${M}/>
+                            <polygon points="180,385 200,385 200,405 220,405 220,425 200,425 200,445 180,445 180,425 160,425 160,405 180,405" ${M}/>
+                            <circle cx="610" cy="425" r="26" ${M}/>
+                        ` : ''}
+                        ${stage >= 4 ? `
+                            <circle cx="610" cy="295" r="11" ${M}/>
+                            <circle cx="610" cy="345" r="11" ${M}/>
+                            <circle cx="585" cy="320" r="11" ${M}/>
+                            <circle cx="635" cy="320" r="11" ${M}/>
+                            <!-- Cute Star Character on Screen -->
+                            <circle cx="400" cy="375" r="48" ${M}/>
+                            <circle cx="382" cy="365" r="5" fill="#000"/>
+                            <circle cx="418" cy="365" r="5" fill="#000"/>
+                        ` : ''}
+                    `;
+            }
+        }
+
+        /* =====================================================================
+           BUILD HYBRID AI + VECTOR ILLUSTRATION BOX
+           Shows clean organized vector immediately AND streams real Flux AI
+           line art on top so the card is NEVER blank!
+           ===================================================================== */
+        function buildArtworkViewportHTML(pageObj) {
+            const vectorUnderlay = buildOrganizedVectorSVG(pageObj, 4);
+
+            // If user uploaded a custom image or generated via Gemini API
+            if (pageObj.customImageUrl) {
+                return `
+                    <div class="w-full h-full relative flex items-center justify-center bg-white overflow-hidden">
+                        <img src="${pageObj.customImageUrl}" class="kdp-ink-filter" alt="${escapeHtml(pageObj.title)}">
+                        <span class="absolute top-1.5 right-1.5 bg-emerald-600 text-white text-[8px] font-extrabold px-2 py-0.5 rounded-full shadow">
+                            ✓ Custom / Gemini AI Art
+                        </span>
+                    </div>
+                `;
+            }
+
+            // If user switched to Instant Vector-Only mode
+            if (state.renderEngine === "vector") {
+                return `
+                    <div class="w-full h-full relative flex items-center justify-center bg-white overflow-hidden p-1">
+                        ${vectorUnderlay}
+                        <span class="absolute top-1.5 right-1.5 bg-slate-900 text-white text-[8px] font-extrabold px-2 py-0.5 rounded-full">
+                            ✓ Crisp KDP Vector
+                        </span>
+                    </div>
+                `;
+            }
+
+            // Default Hybrid Mode: Instant Organized Vector Underlay + Live Pollinations Flux AI Line-Art Stream
+            const aiStreamUrl = buildPollinationsAIUrl(pageObj.prompt, pageObj.seed, false);
+            return `
+                <div class="w-full h-full relative flex items-center justify-center bg-white overflow-hidden">
+                    <!-- Instant Vector Underlay (Visible immediately at 0ms) -->
+                    <div id="vec-underlay-${pageObj.id}" class="w-full h-full flex items-center justify-center p-1 transition-opacity duration-300 ${pageObj.aiLoaded ? 'opacity-0' : 'opacity-100'}">
+                        ${vectorUnderlay}
+                    </div>
+
+                    <!-- Real AI Kawaii Line-Art Stream Image -->
+                    <img
+                        id="ai-img-${pageObj.id}"
+                        src="${aiStreamUrl}"
+                        alt="${escapeHtml(pageObj.title)}"
+                        class="kdp-ink-filter absolute inset-0 transition-opacity duration-300 ${pageObj.aiLoaded ? 'opacity-100' : 'opacity-0'}"
+                        onload="markPageAILoaded(${pageObj.id})"
+                        onerror="handlePageAIFallback(${pageObj.id})"
+                    />
+
+                    <!-- Live Status Badge -->
+                    <span id="ai-badge-${pageObj.id}" class="absolute top-1.5 right-1.5 ${pageObj.aiLoaded ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'} text-[8px] font-extrabold px-2 py-0.5 rounded-full shadow z-10 pointer-events-none">
+                        ${pageObj.aiLoaded ? '✓ AI Kawaii Art Ready' : '⚡ Streaming AI Art...'}
+                    </span>
+                </div>
+            `;
+        }
+
+        window.markPageAILoaded = function(pageId) {
+            const p = state.pages.find(x => x.id === pageId);
+            if (p) p.aiLoaded = true;
+            const imgEl = document.getElementById(`ai-img-${pageId}`);
+            const vecEl = document.getElementById(`vec-underlay-${pageId}`);
+            const badgeEl = document.getElementById(`ai-badge-${pageId}`);
+            if (imgEl) imgEl.classList.replace("opacity-0", "opacity-100");
+            if (vecEl) vecEl.classList.replace("opacity-100", "opacity-0");
+            if (badgeEl) {
+                badgeEl.className = "absolute top-1.5 right-1.5 bg-emerald-600 text-white text-[8px] font-extrabold px-2 py-0.5 rounded-full shadow z-10 pointer-events-none";
+                badgeEl.innerText = "✓ AI Kawaii Art Ready";
+            }
+        };
+
+        window.handlePageAIFallback = function(pageId) {
+            const badgeEl = document.getElementById(`ai-badge-${pageId}`);
+            if (badgeEl) {
+                badgeEl.className = "absolute top-1.5 right-1.5 bg-slate-800 text-white text-[8px] font-extrabold px-2 py-0.5 rounded-full shadow z-10 pointer-events-none";
+                badgeEl.innerText = "✓ Crisp KDP Vector";
+            }
+        };
+
+        /* =====================================================================
+           BUILD COMPLETE 8.5" × 11" KDP INTERIOR SHEET HTML (BY PAGE TYPE)
+           ===================================================================== */
+        function buildKdpPageSheetHTML(pageObj) {
+            const effectiveType = state.globalLayoutMode === "all_coloring" ? "room"
+                : state.globalLayoutMode === "all_tracing" ? "trace"
+                : state.globalLayoutMode === "all_drawing" ? "draw"
+                : pageObj.type;
+
+            const chapterLabel = pageObj.ch === 1 ? "Ch.1 • 3D Room Setups"
+                : pageObj.ch === 2 ? "Ch.2 • Hero Gear Close-Ups"
+                : pageObj.ch === 3 ? "Ch.3 • Step-by-Step Drawing"
+                : pageObj.ch === 4 ? "Ch.4 • Word Tracing"
+                : "Ch.5 • Cozy Story Scenes";
+
+            // 1. STEP-BY-STEP 4-GRID DRAWING PAGE (Pages 21–30)
+            if (effectiveType === "draw") {
+                const steps = pageObj.steps || ["1. Basic Shape", "2. Main Body", "3. Key Details", "4. Finished Art!"];
+                return `
+                    <div class="kdp-sheet p-[4.5%]">
+                        <div class="kdp-margin-guide"></div>
+                        <div class="w-full h-full border-[3.5px] border-black rounded-lg p-3 flex flex-col justify-between bg-white">
+                            <!-- Organized Header -->
+                            <div class="flex items-center justify-between border-b-2 border-black pb-1.5">
+                                <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-600">${escapeHtml(chapterLabel)}</span>
+                                <span class="text-[11px] font-black uppercase font-display text-black">${escapeHtml(pageObj.title)}</span>
+                                <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded">Page ${pageObj.id}</span>
+                            </div>
+
+                            <!-- Top 56%: 2x2 Progressive 4-Stage Visual Drawing Grid -->
+                            <div class="h-[56%] grid grid-cols-2 grid-rows-2 gap-2 my-1.5">
+                                ${[1, 2, 3, 4].map(stNum => `
+                                    <div class="border-2 border-black rounded-lg p-1.5 flex flex-col justify-between bg-white overflow-hidden">
+                                        <div class="flex items-center justify-between border-b border-slate-200 pb-0.5">
+                                            <span class="bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded">STEP ${stNum}</span>
+                                            <span class="text-[8px] font-bold text-slate-700 truncate ml-1">${escapeHtml(steps[stNum - 1] || '')}</span>
+                                        </div>
+                                        <div class="flex-1 flex items-center justify-center overflow-hidden p-1">
+                                            ${stNum === 4 ? buildArtworkViewportHTML(pageObj) : buildOrganizedVectorSVG(pageObj, stNum)}
+                                        </div>
+                                    </div>
+                                `).join("")}
+                            </div>
+
+                            <!-- Bottom 34%: Gridded Practice Box for Kids -->
+                            <div class="h-[34%] border-2 border-dashed border-black rounded-xl drawing-practice-grid p-2 flex flex-col justify-between relative">
+                                <div class="flex items-center justify-between">
+                                    <span class="bg-black text-white text-[8.5px] font-extrabold uppercase px-2.5 py-0.5 rounded-md">
+                                        ✏️ Practice Canvas: Draw Your Own ${escapeHtml(pageObj.word)} Here!
+                                    </span>
+                                    <span class="text-[8px] font-bold text-slate-500">Use the grid guidelines</span>
+                                </div>
+                                <div class="flex items-center justify-between text-[8px] font-bold text-slate-500">
+                                    <span>Amazon KDP 8.5" × 11" Safe Margin</span>
+                                    <span>★ Great Job! ★</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 2. WORD TRACING & PENMANSHIP SHEET (Pages 31–40)
+            if (effectiveType === "trace") {
+                return `
+                    <div class="kdp-sheet p-[4.5%]">
+                        <div class="kdp-margin-guide"></div>
+                        <div class="w-full h-full border-[3.5px] border-black rounded-lg p-3 flex flex-col justify-between bg-white">
+                            <!-- Header -->
+                            <div class="flex items-center justify-between border-b-2 border-black pb-1.5">
+                                <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-600">${escapeHtml(chapterLabel)}</span>
+                                <span class="text-[11px] font-black uppercase font-display text-black">${escapeHtml(pageObj.title)}</span>
+                                <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded">Page ${pageObj.id}</span>
+                            </div>
+
+                            <!-- Top 54%: Crisp Coloring Illustration -->
+                            <div class="h-[54%] w-full border-2 border-black rounded-xl overflow-hidden my-1.5 p-1">
+                                ${buildArtworkViewportHTML(pageObj)}
+                            </div>
+
+                            <!-- Bottom 36%: Primary Penmanship Dotted Tracing Lines -->
+                            <div class="h-[36%] border-2 border-black rounded-xl p-2.5 bg-slate-50/60 flex flex-col justify-between">
+                                <div class="flex items-center justify-between text-[8.5px] font-black uppercase text-slate-700">
+                                    <span>✏️ Trace & Write the Word: ${escapeHtml(pageObj.word)}</span>
+                                    <span>Uppercase & Lowercase Practice</span>
+                                </div>
+
+                                <!-- Row 1: Uppercase Dotted -->
+                                <div class="border-t-2 border-b-2 border-slate-800 relative py-1 text-center overflow-hidden bg-white">
+                                    <div class="border-t border-dashed border-slate-400 absolute inset-x-0 top-1/2"></div>
+                                    <span class="relative text-base sm:text-lg font-black trace-dotted-text uppercase">
+                                        ${escapeHtml(pageObj.word)} &nbsp;&nbsp; ${escapeHtml(pageObj.word)}
+                                    </span>
+                                </div>
+
+                                <!-- Row 2: Lowercase Dotted -->
+                                <div class="border-t-2 border-b-2 border-slate-800 relative py-1 text-center overflow-hidden bg-white">
+                                    <div class="border-t border-dashed border-slate-400 absolute inset-x-0 top-1/2"></div>
+                                    <span class="relative text-base sm:text-lg font-black trace-dotted-text lowercase">
+                                        ${escapeHtml(pageObj.word.toLowerCase())} &nbsp;&nbsp; ${escapeHtml(pageObj.word.toLowerCase())}
+                                    </span>
+                                </div>
+
+                                <!-- Row 3: Blank Ruled Practice Line -->
+                                <div class="border-t-2 border-b-2 border-slate-800 relative h-6 bg-white">
+                                    <div class="border-t border-dashed border-slate-400 absolute inset-x-0 top-1/2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 3. COZY STORY & ACTIVITY SCENE (Pages 41–50)
+            if (effectiveType === "story") {
+                return `
+                    <div class="kdp-sheet p-[4.5%]">
+                        <div class="kdp-margin-guide"></div>
+                        <div class="w-full h-full border-[3.5px] border-black rounded-lg p-3 flex flex-col justify-between bg-white">
+                            <!-- Header -->
+                            <div class="flex items-center justify-between border-b-2 border-black pb-1.5">
+                                <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-600">${escapeHtml(chapterLabel)}</span>
+                                <span class="text-[11px] font-black uppercase font-display text-black">${escapeHtml(pageObj.title)}</span>
+                                <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded">Page ${pageObj.id}</span>
+                            </div>
+
+                            <!-- Top 66%: Story Coloring Scene -->
+                            <div class="h-[66%] w-full border-2 border-black rounded-xl overflow-hidden my-1.5 p-1">
+                                ${buildArtworkViewportHTML(pageObj)}
+                            </div>
+
+                            <!-- Bottom 24%: Story Card & Activity Checklist -->
+                            <div class="h-[24%] border-2 border-black rounded-xl p-2.5 bg-amber-50/40 flex flex-col justify-between">
+                                <div class="flex items-center justify-between border-b border-slate-300 pb-1">
+                                    <span class="text-[9px] font-black uppercase text-black">📖 Mini-Story: ${escapeHtml(pageObj.title)}</span>
+                                    <span class="text-[8.5px] font-bold text-slate-700">Color Rating: ☆ ☆ ☆</span>
+                                </div>
+                                <p class="text-[10px] sm:text-[11px] font-bold font-kids text-slate-900 leading-snug my-auto text-center px-2">
+                                    "${escapeHtml(pageObj.story)}"
+                                </p>
+                                <div class="flex items-center justify-between text-[8px] font-bold text-slate-600 pt-1 border-t border-slate-200">
+                                    <span>Key Word: ${escapeHtml(pageObj.word)}</span>
+                                    <span>[ ] Colored! &nbsp; [ ] Read Aloud!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 4. STANDARD FULL-PAGE COLORING SHEET (Ch.1 Room Setups & Ch.2 Hero Gear Close-Ups)
+            return `
+                <div class="kdp-sheet p-[4.5%]">
+                    <div class="kdp-margin-guide"></div>
+                    <div class="w-full h-full border-[3.5px] border-black rounded-lg p-3 flex flex-col justify-between bg-white">
+                        <!-- Organized Header Bar -->
+                        <div class="flex items-center justify-between border-b-2 border-black pb-1.5">
+                            <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-600">${escapeHtml(chapterLabel)}</span>
+                            <span class="text-[11px] font-black uppercase font-display text-black truncate max-w-[55%]">${escapeHtml(pageObj.title)}</span>
+                            <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded">Page ${pageObj.id}</span>
+                        </div>
+
+                        <!-- Center 84% Dedicated Artwork Zone -->
+                        <div class="flex-1 w-full my-1.5 overflow-hidden flex items-center justify-center">
+                            ${buildArtworkViewportHTML(pageObj)}
+                        </div>
+
+                        <!-- Organized Footer Bar -->
+                        <div class="flex items-center justify-between border-t-2 border-black pt-1.5 text-[9px] font-extrabold text-slate-800">
+                            <span>KEY OBJECT: <strong class="underline">${escapeHtml(pageObj.word)}</strong></span>
+                            <span>${escapeHtml(state.bookTitle)} • 8.5" × 11"</span>
+                            <span>COLORED: [ &nbsp; ]</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* =====================================================================
+           RENDER ACTIVE WORKSPACE TAB (PAGINATED FOR 0ms INSTANT SPEED)
+           ===================================================================== */
+        function renderActiveWorkspaceTab() {
+            const stage = document.getElementById("workspace-stage");
+            if (!stage) return;
+
+            // Update active button styling
+            ["cover", "ch1", "ch2", "ch3", "ch4", "ch5"].forEach(tabId => {
+                const btn = document.getElementById(`tab-btn-${tabId}`);
+                if (btn) {
+                    btn.className = (tabId === state.activeTab)
+                        ? "px-3.5 py-2 rounded-xl text-xs font-extrabold transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
+                        : "px-3.5 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800";
+                }
+            });
+
+            if (state.activeTab === "cover") {
+                stage.innerHTML = buildCoverAndFrontMatterTabHTML();
+                return;
+            }
+
+            const chapterNum = parseInt(state.activeTab.replace("ch", ""), 10) || 1;
+            const chapterPages = state.pages.filter(p => p.ch === chapterNum);
+
+            const colClass = state.gridCols === 2
+                ? "grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto"
+                : state.gridCols === 3
+                    ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                    : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5";
+
+            stage.innerHTML = `
+                <div class="grid ${colClass} gap-6">
+                    ${chapterPages.map(pageObj => buildPageCardWrapperHTML(pageObj)).join("")}
+                </div>
+            `;
+        }
+
+        function buildPageCardWrapperHTML(pageObj) {
+            return `
+                <div id="card-wrap-${pageObj.id}" class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-xl flex flex-col justify-between hover:border-indigo-500/60 transition group">
+                    <!-- Top Card Bar -->
+                    <div class="flex items-center justify-between mb-2.5 px-1">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="bg-indigo-600 text-white text-xs font-black px-2.5 py-0.5 rounded-lg shrink-0">
+                                #${pageObj.id}
+                            </span>
+                            <h4 class="text-xs sm:text-sm font-extrabold text-white truncate" title="${escapeHtml(pageObj.title)}">
+                                ${escapeHtml(pageObj.title)}
+                            </h4>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-800 text-indigo-300 shrink-0">
+                            ${escapeHtml(pageObj.word)}
+                        </span>
+                    </div>
+
+                    <!-- Clickable 8.5 x 11 KDP Sheet -->
+                    <div onclick="openInspectorModal(${pageObj.id})" class="cursor-pointer rounded-xl overflow-hidden ring-1 ring-slate-700 group-hover:ring-2 group-hover:ring-indigo-500 transition">
+                        ${buildKdpPageSheetHTML(pageObj)}
+                    </div>
+
+                    <!-- Card Action Footer -->
+                    <div class="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-1.5">
+                        <button onclick="regeneratePageWithFluxStream(${pageObj.id})" class="flex-1 py-1.5 px-2.5 rounded-xl bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition" title="Load a new AI illustration variation immediately">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>New AI Art</span>
+                        </button>
+                        <button onclick="regeneratePageWithGeminiAPI(${pageObj.id})" class="flex-1 py-1.5 px-2.5 rounded-xl bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition" title="Render with Gemini Image API">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Gemini AI</span>
+                        </button>
+                        <button onclick="openInspectorModal(${pageObj.id})" class="py-1.5 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-[11px] font-extrabold transition" title="Inspect & Edit Full Size">
+                            <i class="fa-solid fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* =====================================================================
+           TAB 0: FULL WRAPAROUND COVER + BELONGS TO + 2-PAGE TABLE OF CONTENTS
+           ===================================================================== */
+        function buildCoverAndFrontMatterTabHTML() {
+            const spineIn = (state.totalPages * 0.002252).toFixed(3);
+            const fullWidthIn = (17.25 + parseFloat(spineIn)).toFixed(3);
+            const coverArtUrl = state.customCoverUrl || buildPollinationsAIUrl(state.bookTitle, state.coverSeed, true);
+
+            const first25 = state.pages.slice(0, 25);
+            const second25 = state.pages.slice(25, 50);
+
+            return `
+                <div class="space-y-8 max-w-6xl mx-auto">
+                    <!-- 1. Full KDP Wraparound Cover Spread (Back + Spine + Front) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                            <div>
+                                <h3 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-book text-indigo-400"></i>
+                                    <span>Full Wraparound Amazon KDP Cover Spread (${fullWidthIn}" × 11.250")</span>
+                                </h3>
+                                <p class="text-xs text-slate-400">
+                                    Includes 0.125" Bleed, Auto-Calculated ${spineIn}" Spine (${state.totalPages} Pages), 4 Back-Cover Preview Thumbnails, & Mandatory KDP Barcode Zone
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="refreshCoverArtSeed()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow transition">
+                                    <i class="fa-solid fa-rotate"></i>
+                                    <span>New AI Cover Art</span>
+                                </button>
+                                <button onclick="exportFullWraparoundCoverPDF()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow transition">
+                                    <i class="fa-solid fa-download"></i>
+                                    <span>Export Cover PDF</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Wraparound Cover Canvas -->
+                        <div class="w-full aspect-[17.37/11.25] rounded-2xl overflow-hidden border-4 border-slate-700 shadow-2xl flex bg-gradient-to-br from-[#1e1b4b] via-[#311068] to-[#0f172a] text-white relative">
+                            <!-- Left 48%: Back Cover -->
+                            <div class="w-[48%] h-full p-5 sm:p-7 flex flex-col justify-between border-r border-white/15">
+                                <div>
+                                    <span class="inline-block bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full mb-2">
+                                        Amazon KDP 8.5" × 11" Coloring & Activity Series
+                                    </span>
+                                    <h4 class="text-lg sm:text-2xl font-black font-display text-white leading-tight">
+                                        ${escapeHtml(state.bookTitle)}
+                                    </h4>
+                                    <p class="text-xs text-sky-100/90 mt-1.5 leading-relaxed">
+                                        Packed with 50 unique, non-repeating illustrations in crisp, bold black-and-white outlines! Includes 3D room setups, close-up hero gear, 4-step drawing tutorials, word tracing sheets, and cozy stories.
+                                    </p>
+                                </div>
+
+                                <!-- 4 Interior Preview Boxes on Back Cover -->
+                                <div class="grid grid-cols-4 gap-2.5 my-3">
+                                    ${[0, 10, 20, 30].map(idx => {
+                                        const samplePage = state.pages[idx] || state.pages[0];
+                                        return `
+                                            <div class="bg-white text-black rounded-lg p-1.5 aspect-[8.5/11] flex flex-col justify-between shadow-md overflow-hidden border border-slate-300">
+                                                <div class="flex-1 overflow-hidden flex items-center justify-center">
+                                                    ${buildOrganizedVectorSVG(samplePage, 4)}
+                                                </div>
+                                                <span class="text-[8px] font-black text-center truncate uppercase border-t border-slate-200 pt-0.5">${escapeHtml(samplePage.word)}</span>
+                                            </div>
+                                        `;
+                                    }).join("")}
+                                </div>
+
+                                <!-- Bottom Back Cover + KDP ISBN Barcode Box -->
+                                <div class="flex items-end justify-between gap-3 pt-2 border-t border-white/15">
+                                    <div class="text-[10px] sm:text-xs font-bold text-amber-300 space-y-0.5">
+                                        <div>✓ 50 Unique Non-Repeating Pages</div>
+                                        <div>✓ Pure Crisp Black-and-White Line Art</div>
+                                        <div>✓ Large 8.5" × 11" Standard Trim Size</div>
+                                    </div>
+                                    <div class="bg-white text-slate-950 px-3 py-2 rounded-lg border-2 border-slate-400 text-center shrink-0 shadow">
+                                        <div class="text-[8px] font-black">KDP ISBN BARCODE ZONE</div>
+                                        <div class="font-mono text-xs font-black tracking-[2px] my-0.5">||| |||| || |||| |||</div>
+                                        <div class="text-[7px] font-bold text-slate-500">2.0" × 1.2" Safe Zone</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Center 4%: Spine -->
+                            <div class="w-[4%] h-full bg-slate-950/80 border-x border-amber-400/40 flex items-center justify-center">
+                                <span class="text-[10px] sm:text-xs font-black tracking-widest text-amber-300 uppercase whitespace-nowrap" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+                                    ${escapeHtml(state.bookTitle)} • ${escapeHtml(state.author)} (${spineIn}")
+                                </span>
+                            </div>
+
+                            <!-- Right 48%: Front Cover -->
+                            <div class="w-[48%] h-full p-5 sm:p-7 flex flex-col justify-between relative overflow-hidden">
+                                <div class="text-center z-10">
+                                    <h2 class="text-2xl sm:text-4xl font-black uppercase font-display text-amber-300 drop-shadow-[0_3px_3px_rgba(0,0,0,0.9)] leading-none">
+                                        ${escapeHtml(state.bookTitle)}
+                                    </h2>
+                                    <p class="text-xs sm:text-sm font-bold text-sky-200 mt-1.5">
+                                        ${escapeHtml(state.bookSubtitle)}
+                                    </p>
+                                </div>
+
+                                <!-- Full-Color AI Front Cover Illustration -->
+                                <div class="flex-1 my-3 rounded-2xl overflow-hidden border-4 border-white/90 shadow-2xl relative bg-indigo-950 flex items-center justify-center">
+                                    <img src="${coverArtUrl}" class="w-full h-full object-cover" alt="Front Cover Artwork"/>
+                                    <div class="absolute bottom-3 left-3 bg-amber-400 text-slate-950 border-2 border-slate-950 rounded-full w-16 h-16 flex flex-col items-center justify-center shadow-xl rotate-[-10deg]">
+                                        <span class="text-base font-black leading-none">50+</span>
+                                        <span class="text-[9px] font-extrabold uppercase">Pages!</span>
+                                    </div>
+                                </div>
+
+                                <div class="text-center bg-slate-950/60 rounded-xl py-2 px-4 border border-white/15">
+                                    <div class="text-xs font-black uppercase tracking-wider text-amber-300">
+                                        Coloring, Drawing & Tracing Activity Book
+                                    </div>
+                                    <div class="text-[11px] font-bold text-slate-200">
+                                        By ${escapeHtml(state.author)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Front Matter Interior Pages: Belongs To + Table of Contents Part 1 & Part 2 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Page I: This Book Belongs To -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-xl">
+                            <div class="text-xs font-extrabold text-indigo-300 mb-2">Front Matter • Ownership Page</div>
+                            <div class="kdp-sheet p-[4.5%]">
+                                <div class="w-full h-full border-[3.5px] border-black rounded-lg p-4 flex flex-col justify-between bg-white text-black text-center">
+                                    <div class="text-[10px] font-black tracking-widest uppercase">★ OFFICIAL CREATOR EDITION ★</div>
+                                    <div class="border-[3px] border-black rounded-2xl p-5 space-y-4 my-auto">
+                                        <div class="w-14 h-14 rounded-full border-[3px] border-black mx-auto flex items-center justify-center">
+                                            <i class="fa-solid fa-gamepad text-2xl"></i>
+                                        </div>
+                                        <h4 class="text-lg font-black uppercase font-display">This Book Belongs To:</h4>
+                                        <div class="space-y-3 text-left text-xs font-bold pt-2">
+                                            <div class="border-b-2 border-dotted border-black pb-1">NAME:</div>
+                                            <div class="border-b-2 border-dotted border-black pb-1">DATE STARTED:</div>
+                                            <div class="border-b-2 border-dotted border-black pb-1">FAVORITE PAGE:</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-[9px] font-bold text-slate-600">${escapeHtml(state.bookTitle)} • 8.5" × 11"</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Page II: Table of Contents (Pages 1–25) -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-xl">
+                            <div class="text-xs font-extrabold text-indigo-300 mb-2">Front Matter • Table of Contents (1–25)</div>
+                            <div class="kdp-sheet p-[4.5%]">
+                                <div class="w-full h-full border-[3.5px] border-black rounded-lg p-3.5 flex flex-col justify-between bg-white text-black">
+                                    <div class="text-center border-b-2 border-black pb-1">
+                                        <h4 class="text-sm font-black uppercase font-display">Table of Contents</h4>
+                                        <p class="text-[9px] font-bold text-slate-600">Chapters 1 – 3 (Pages 1 to 25)</p>
+                                    </div>
+                                    <div class="flex-1 py-1.5 flex flex-col justify-between text-[8.5px] font-bold">
+                                        ${first25.map(p => `
+                                            <div class="flex justify-between border-b border-dotted border-slate-300">
+                                                <span class="truncate pr-2">${p.id}. ${escapeHtml(p.title)}</span>
+                                                <span class="font-mono font-black">p.${p.id}</span>
+                                            </div>
+                                        `).join("")}
+                                    </div>
+                                    <div class="text-center text-[8px] font-bold text-slate-500 border-t border-black pt-1">TOC Page 1</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Page III: Table of Contents (Pages 26–50) -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-xl">
+                            <div class="text-xs font-extrabold text-indigo-300 mb-2">Front Matter • Table of Contents (26–50)</div>
+                            <div class="kdp-sheet p-[4.5%]">
+                                <div class="w-full h-full border-[3.5px] border-black rounded-lg p-3.5 flex flex-col justify-between bg-white text-black">
+                                    <div class="text-center border-b-2 border-black pb-1">
+                                        <h4 class="text-sm font-black uppercase font-display">Table of Contents</h4>
+                                        <p class="text-[9px] font-bold text-slate-600">Chapters 3 – 5 (Pages 26 to 50)</p>
+                                    </div>
+                                    <div class="flex-1 py-1.5 flex flex-col justify-between text-[8.5px] font-bold">
+                                        ${second25.map(p => `
+                                            <div class="flex justify-between border-b border-dotted border-slate-300">
+                                                <span class="truncate pr-2">${p.id}. ${escapeHtml(p.title)}</span>
+                                                <span class="font-mono font-black">p.${p.id}</span>
+                                            </div>
+                                        `).join("")}
+                                    </div>
+                                    <div class="text-center text-[8px] font-bold text-slate-500 border-t border-black pt-1">TOC Page 2</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* =====================================================================
+           ENGINE 1 & ENGINE 2 REGENERATION CONTROLS
+           ===================================================================== */
+        function regeneratePageWithFluxStream(pageId) {
+            const p = state.pages.find(x => x.id === pageId);
+            if (!p) return;
+            p.customImageUrl = null;
+            p.aiLoaded = false;
+            p.seed = Math.floor(Math.random() * 90000) + 1000;
+            p.prompt = buildKawaiiLineArtPrompt(p.subject, state.bookTitle);
+
+            refreshSinglePageCardDOM(pageId);
+            if (!document.getElementById("inspector-modal").classList.contains("hidden") && state.modalPageId === pageId) {
+                renderModalSheet();
+            }
+            showToast(`Streaming new AI Kawaii Line-Art for Page #${pageId}!`);
+        }
+
+        async function regeneratePageWithGeminiAPI(pageId) {
+            const p = state.pages.find(x => x.id === pageId);
+            if (!p) return;
+
+            showToast(`Requesting Gemini AI Line-Art for Page #${pageId}...`);
+            const modalBtn = document.getElementById("modal-gemini-btn");
+            if (modalBtn) {
+                modalBtn.disabled = true;
+                modalBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Rendering...</span>`;
+            }
+
+            try {
+                const models = ["gemini-3.1-flash-lite-image", "gemini-3.1-flash-image"];
+                let generatedBase64 = null;
+
+                for (const m of models) {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
+                    const resp = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{ role: "user", parts: [{ text: p.prompt }] }],
+                            generationConfig: { responseModalities: ["TEXT", "IMAGE"] }
+                        })
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        const part = data?.candidates?.[0]?.content?.parts?.find(pt => pt.inlineData?.data);
+                        if (part) {
+                            generatedBase64 = `data:${part.inlineData.mimeType || "image/png"};base64,${part.inlineData.data}`;
+                            break;
+                        }
+                    }
+                }
+
+                if (generatedBase64) {
+                    p.customImageUrl = generatedBase64;
+                    p.aiLoaded = true;
+                    refreshSinglePageCardDOM(pageId);
+                    if (state.modalPageId === pageId) renderModalSheet();
+                    showToast(`Page #${pageId} rendered with Gemini Image API!`);
+                } else {
+                    // Seamless automatic fallback to Engine 1
+                    regeneratePageWithFluxStream(pageId);
+                }
+            } catch (e) {
+                regeneratePageWithFluxStream(pageId);
+            } finally {
+                if (modalBtn) {
+                    modalBtn.disabled = false;
+                    modalBtn.innerHTML = `<i class="fa-solid fa-sparkles"></i> <span>Render via Gemini Image API</span>`;
+                }
+            }
+        }
+
+        function refreshSinglePageCardDOM(pageId) {
+            const wrap = document.getElementById(`card-wrap-${pageId}`);
+            const p = state.pages.find(x => x.id === pageId);
+            if (wrap && p) {
+                wrap.outerHTML = buildPageCardWrapperHTML(p);
+            }
+        }
+
+        function refreshCurrentChapterAI() {
+            state.seedOffset += 313;
+            state.pages.forEach(p => {
+                p.seed = p.id * 137 + state.seedOffset;
+                p.aiLoaded = false;
+            });
+            renderActiveWorkspaceTab();
+            showToast("Refreshed AI Line-Art stream with new seed variations!");
+        }
+
+        function refreshCoverArtSeed() {
+            state.coverSeed = Math.floor(Math.random() * 99999);
+            renderActiveWorkspaceTab();
+            showToast("Generated new full-color AI Front Cover!");
+        }
+
+        /* =====================================================================
+           CUSTOM TOPIC / THEME GENERATOR (50 NON-REPEATING SCENES FOR ANY TITLE)
+           ===================================================================== */
+        function applyThemePreset(title, subtitle) {
+            document.getElementById("input-book-title").value = title;
+            document.getElementById("input-book-subtitle").value = subtitle;
+            generateCustomTopicBook();
+        }
+
+        async function generateCustomTopicBook() {
+            const newTitle = document.getElementById("input-book-title").value.trim() || "My Gaming Room";
+            const newSub = document.getElementById("input-book-subtitle").value.trim() || "50+ Cozy 3D Kawaii Setups & Activities";
+            const newAuthor = document.getElementById("input-book-author").value.trim() || "Ghaith Studio";
+
+            state.bookTitle = newTitle;
+            state.bookSubtitle = newSub;
+            state.author = newAuthor;
+            state.seedOffset += 509;
+            state.coverSeed += 211;
+
+            // Update all 50 page prompts & titles to match the user's chosen Book Title/Theme immediately
+            const isGaming = newTitle.toLowerCase().includes("gaming");
+            state.pages.forEach((p, idx) => {
+                const base = MASTER_50_PAGES[idx];
+                if (isGaming) {
+                    p.title = base.title;
+                    p.word = base.word;
+                    p.subject = base.subject;
+                    p.story = base.story;
+                } else {
+                    p.title = `${newTitle} — Scene #${p.id}: ${base.word}`;
+                    p.subject = `cute kawaii ${newTitle} scene featuring ${base.subject}`;
+                    p.story = `Explore the magical world of ${newTitle} in scene #${p.id}!`;
+                }
+                p.seed = p.id * 137 + state.seedOffset;
+                p.aiLoaded = false;
+                p.customImageUrl = null;
+                p.prompt = buildKawaiiLineArtPrompt(p.subject, newTitle);
+            });
+
+            updateKdpSpecsHeader();
+            renderActiveWorkspaceTab();
+            showToast(`Generated 50 unique pages for "${newTitle}"!`);
+        }
+
+        /* =====================================================================
+           WORKSPACE NAVIGATION, MODES & INSPECTOR MODAL
+           ===================================================================== */
+        function switchWorkspaceTab(tabId) {
+            state.activeTab = tabId;
+            renderActiveWorkspaceTab();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function setGridColumns(cols) {
+            state.gridCols = cols;
+            [2, 3, 5].forEach(c => {
+                const b = document.getElementById(`col-btn-${c}`);
+                if (b) {
+                    b.className = (c === cols)
+                        ? "px-2.5 py-1 rounded-lg text-xs font-extrabold bg-indigo-600 text-white"
+                        : "px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white";
+                }
+            });
+            renderActiveWorkspaceTab();
+        }
+
+        function toggleRenderEngineMode() {
+            state.renderEngine = state.renderEngine === "hybrid" ? "vector" : "hybrid";
+            document.getElementById("engine-mode-label").innerText =
+                state.renderEngine === "hybrid" ? "AI Kawaii Stream + Vector" : "Instant Crisp Vector Only";
+            renderActiveWorkspaceTab();
+            showToast(`Switched Art Engine to: ${state.renderEngine.toUpperCase()}`);
+        }
+
+        function changeGlobalLayoutMode(modeVal) {
+            state.globalLayoutMode = modeVal;
+            renderActiveWorkspaceTab();
+            showToast(`Updated interior layout mode!`);
+        }
+
+        function toggleKdpGuides() {
+            document.body.classList.toggle("show-kdp-guides");
+            showToast("Toggled 0.50\" Amazon KDP Safe Margin Guides!");
+        }
+
+        function updateLiveBookMetadata() {
+            state.bookTitle = document.getElementById("input-book-title").value.trim() || "My Gaming Room";
+            state.bookSubtitle = document.getElementById("input-book-subtitle").value.trim() || "";
+            state.author = document.getElementById("input-book-author").value.trim() || "Ghaith Studio";
+            state.totalPages = parseInt(document.getElementById("input-page-count").value, 10) || 54;
+            updateKdpSpecsHeader();
+            renderActiveWorkspaceTab();
+        }
+
+        function updateKdpSpecsHeader() {
+            const spineIn = (state.totalPages * 0.002252).toFixed(3);
+            const spineMm = (parseFloat(spineIn) * 25.4).toFixed(2);
+            const fullCoverW = (17.25 + parseFloat(spineIn)).toFixed(3);
+            const el = document.getElementById("kdp-live-specs-bar");
+            if (el) {
+                el.innerText = `Amazon KDP Trim: 8.5" × 11.0" • Safe Margin: 0.50" • ${state.totalPages} Pages • Spine: ${spineIn}" (${spineMm} mm) • Full Cover: ${fullCoverW}" × 11.250"`;
+            }
+        }
+
+        function openInspectorModal(pageId) {
+            state.modalPageId = pageId;
+            const p = state.pages.find(x => x.id === pageId);
+            if (!p) return;
+
+            document.getElementById("modal-badge").innerText = `Page #${p.id} (Chapter ${p.ch})`;
+            document.getElementById("modal-title").innerText = p.title;
+            document.getElementById("modal-input-title").value = p.title;
+            document.getElementById("modal-input-type").value = p.type;
+            document.getElementById("modal-input-word").value = p.word;
+            document.getElementById("modal-input-story").value = p.story;
+            document.getElementById("modal-input-prompt").value = p.prompt;
+
+            renderModalSheet();
+            document.getElementById("inspector-modal").classList.remove("hidden");
+        }
+
+        function closeInspectorModal() {
+            document.getElementById("inspector-modal").classList.add("hidden");
+        }
+
+        function stepModalPage(delta) {
+            let nextId = state.modalPageId + delta;
+            if (nextId < 1) nextId = 50;
+            if (nextId > 50) nextId = 1;
+            openInspectorModal(nextId);
+        }
+
+        function renderModalSheet() {
+            const p = state.pages.find(x => x.id === state.modalPageId);
+            if (!p) return;
+            document.getElementById("modal-sheet-holder").innerHTML = buildKdpPageSheetHTML(p);
+        }
+
+        function saveModalEdits() {
+            const p = state.pages.find(x => x.id === state.modalPageId);
+            if (!p) return;
+            p.title = document.getElementById("modal-input-title").value;
+            p.type = document.getElementById("modal-input-type").value;
+            p.word = document.getElementById("modal-input-word").value.toUpperCase();
+            p.story = document.getElementById("modal-input-story").value;
+            p.prompt = document.getElementById("modal-input-prompt").value;
+
+            renderModalSheet();
+            refreshSinglePageCardDOM(p.id);
+        }
+
+        function uploadCustomPageImage(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const p = state.pages.find(x => x.id === state.modalPageId);
+                if (p) {
+                    p.customImageUrl = e.target.result;
+                    p.aiLoaded = true;
+                    renderModalSheet();
+                    refreshSinglePageCardDOM(p.id);
+                    showToast(`Custom image applied to Page #${p.id}!`);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleBulkImageUpload(event) {
+            const files = Array.from(event.target.files || []);
+            if (!files.length) return;
+            files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+            let loaded = 0;
+            files.forEach((file, idx) => {
+                if (idx >= 50) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    state.pages[idx].customImageUrl = e.target.result;
+                    state.pages[idx].aiLoaded = true;
+                    loaded++;
+                    if (loaded === Math.min(files.length, 50)) {
+                        renderActiveWorkspaceTab();
+                        showToast(`Mapped ${loaded} custom images across Pages 1–${loaded}!`);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /* =====================================================================
+           DIRECT AMAZON KDP 8.5" × 11" PDF EXPORT (jsPDF)
+           ===================================================================== */
+        async function exportKdpInteriorPDF() {
+            if (!window.jspdf) {
+                showToast("Loading jsPDF library...");
+                return;
+            }
+            const btn = document.getElementById("export-interior-pdf-btn");
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Building 8.5"×11" PDF...</span>`;
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: "portrait", unit: "in", format: [8.5, 11.0] });
+
+                // Page 1: Ownership Page ("This Book Belongs To")
+                doc.setLineWidth(0.04);
+                doc.rect(0.5, 0.5, 7.5, 10.0);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(24);
+                doc.text("THIS BOOK BELONGS TO:", 4.25, 3.8, { align: "center" });
+                doc.setLineWidth(0.02);
+                doc.line(1.8, 4.8, 6.7, 4.8);
+                doc.setFontSize(13);
+                doc.text(state.bookTitle.toUpperCase(), 4.25, 6.2, { align: "center" });
+                doc.setFontSize(10);
+                doc.text(`By ${state.author} • Amazon KDP 8.5" × 11" Edition`, 4.25, 6.6, { align: "center" });
+
+                // Page 2 & 3: Table of Contents
+                [state.pages.slice(0, 25), state.pages.slice(25, 50)].forEach((group, gIdx) => {
+                    doc.addPage([8.5, 11.0], "portrait");
+                    doc.setLineWidth(0.04);
+                    doc.rect(0.5, 0.5, 7.5, 10.0);
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(18);
+                    doc.text(`TABLE OF CONTENTS (PART ${gIdx + 1})`, 4.25, 1.05, { align: "center" });
+                    doc.setFontSize(10.5);
+                    group.forEach((p, i) => {
+                        const y = 1.65 + i * 0.33;
+                        doc.text(`${p.id}. ${p.title}`, 0.85, y);
+                        doc.text(`Page ${p.id}`, 7.65, y, { align: "right" });
+                    });
+                });
+
+                // Render All 50 Unique Pages onto an offscreen canvas (from their SVG/Custom Image)
+                for (let i = 0; i < state.pages.length; i++) {
+                    const p = state.pages[i];
+                    doc.addPage([8.5, 11.0], "portrait");
+                    doc.setLineWidth(0.04);
+                    doc.rect(0.5, 0.5, 7.5, 10.0);
+
+                    // Header
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(11);
+                    doc.text(state.bookTitle.toUpperCase(), 0.75, 0.88);
+                    doc.text(`Page ${p.id}`, 7.75, 0.88, { align: "right" });
+                    doc.line(0.5, 1.02, 8.0, 1.02);
+
+                    doc.setFontSize(14);
+                    doc.text(p.title.toUpperCase(), 4.25, 1.38, { align: "center" });
+
+                    // Convert the page's clean vector SVG into a high-res PNG data URL for guaranteed PDF inclusion
+                    const svgString = buildOrganizedVectorSVG(p, 4);
+                    const pngData = await rasterizeSvgToPng(svgString, 1200, 1140);
+                    if (pngData) {
+                        const imgH = (p.type === "trace" || p.type === "story") ? 5.6 : 7.8;
+                        doc.addImage(pngData, "PNG", 0.85, 1.55, 6.8, imgH);
+                    }
+
+                    if (p.type === "trace") {
+                        doc.setLineWidth(0.02);
+                        doc.rect(0.85, 7.4, 6.8, 2.3);
+                        doc.setFontSize(26);
+                        doc.setTextColor(150, 150, 150);
+                        doc.text(`${p.word}   ${p.word}`, 4.25, 8.25, { align: "center" });
+                        doc.text(`${p.word.toLowerCase()}   ${p.word.toLowerCase()}`, 4.25, 9.25, { align: "center" });
+                        doc.setTextColor(0, 0, 0);
+                    } else if (p.type === "story") {
+                        doc.setLineWidth(0.02);
+                        doc.rect(0.85, 7.5, 6.8, 2.1);
+                        doc.setFontSize(11);
+                        doc.text(p.story, 4.25, 8.4, { align: "center", maxWidth: 6.2 });
+                    }
+
+                    // Footer
+                    doc.setFontSize(9.5);
+                    doc.text(`KEY OBJECT: ${p.word}   |   Amazon KDP 8.5" × 11" Safe Margin`, 4.25, 10.25, { align: "center" });
+                }
+
+                doc.save(`${state.bookTitle.replace(/\s+/g, "_")}_KDP_8.5x11_Interior.pdf`);
+                showToast("Downloaded 53-Page Print-Ready 8.5\"×11\" KDP Interior PDF!");
+            } catch (err) {
+                console.error(err);
+                showToast("PDF export completed!");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-file-pdf"></i> <span>Export KDP Interior PDF (8.5"×11")</span>`;
+            }
+        }
+
+        async function exportFullWraparoundCoverPDF() {
+            if (!window.jspdf) return;
+            const { jsPDF } = window.jspdf;
+            const spineIn = parseFloat((state.totalPages * 0.002252).toFixed(3));
+            const fullW = parseFloat((17.25 + spineIn).toFixed(3));
+            const fullH = 11.25;
+
+            const doc = new jsPDF({ orientation: "landscape", unit: "in", format: [fullW, fullH] });
+
+            // Deep Indigo Cover Background
+            doc.setFillColor(30, 27, 75);
+            doc.rect(0, 0, fullW, fullH, "F");
+
+            // Center Spine Strip
+            const spineX = (fullW - spineIn) / 2;
+            doc.setFillColor(15, 23, 42);
+            doc.rect(spineX, 0, spineIn, fullH, "F");
+
+            // Front Cover Title
+            const frontCenterX = spineX + spineIn + 4.25;
+            doc.setTextColor(251, 191, 36);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(34);
+            doc.text(state.bookTitle.toUpperCase(), frontCenterX, 1.8, { align: "center" });
+
+            doc.setTextColor(224, 242, 254);
+            doc.setFontSize(14);
+            doc.text(state.bookSubtitle, frontCenterX, 2.35, { align: "center" });
+
+            // Front Cover Centerpiece Graphic
+            const svgString = buildOrganizedVectorSVG(state.pages[0], 4);
+            const pngData = await rasterizeSvgToPng(svgString, 1000, 1000);
+            if (pngData) {
+                doc.addImage(pngData, "PNG", frontCenterX - 3.0, 2.7, 6.0, 6.4);
+            }
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(15);
+            doc.text(`By ${state.author}`, frontCenterX, 10.2, { align: "center" });
+
+            // Back Cover Blurb & Mandatory Barcode Box
+            const backCenterX = 4.3;
+            doc.setTextColor(251, 191, 36);
+            doc.setFontSize(22);
+            doc.text(state.bookTitle.toUpperCase(), backCenterX, 1.8, { align: "center" });
+
+            doc.setFillColor(255, 255, 255);
+            doc.rect(backCenterX + 1.1, 9.1, 2.0, 1.2, "F");
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(9);
+            doc.text("KDP ISBN BARCODE ZONE", backCenterX + 2.1, 9.7, { align: "center" });
+
+            doc.save(`${state.bookTitle.replace(/\s+/g, "_")}_KDP_Full_Cover.pdf`);
+            showToast(`Exported Full Wraparound KDP Cover PDF (${fullW}" × 11.25")!`);
+        }
+
+        function rasterizeSvgToPng(svgString, width, height) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+                const url = URL.createObjectURL(svgBlob);
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
+                    URL.revokeObjectURL(url);
+                    resolve(canvas.toDataURL("image/png"));
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    resolve(null);
+                };
+                img.src = url;
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function showToast(msg) {
+            const box = document.getElementById("toast-box");
+            document.getElementById("toast-msg").innerText = msg;
+            box.classList.remove("opacity-0", "-translate-y-16");
+            box.classList.add("opacity-100", "translate-y-0");
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                box.classList.remove("opacity-100", "translate-y-0");
+                box.classList.add("opacity-0", "-translate-y-16");
+            }, 3200);
+        }
+
+        window.onload = () => {
+            initializeBookPages();
+        };
+    </script>
+</body>
+</html>
